@@ -1,0 +1,97 @@
+/* Fuente limpia y moderna */
+body {
+  margin: 0;
+  font-family: "Segoe UI", Roboto, Arial, sans-serif;
+  background: #0d1117; /* Dark global */
+  color: #e2e2e2;
+}
+
+/* Títulos */
+h2, .page-title {
+  font-size: 26px;
+  font-weight: 700;
+  color: #2ecc71;
+  margin-bottom: 18px;
+}
+
+/* Contenedor general */
+.container {
+  max-width: 1000px;
+  margin: auto;
+  margin-top: 20px;
+  padding: 10px;
+}
+
+/* TABLA – Dark Style */
+.table-container {
+  background: #111418;                   /* Panel oscuro */
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0px 4px 12px rgba(0,0,0,0.6);
+  border: 1px solid #1f2a33;            /* Borde sutil */
+}
+
+
+.standings-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+/* Header tabla */
+.standings-table thead {
+  background: #0a4626;
+  color: #e9ffe9;
+  text-transform: uppercase;
+  font-size: 14px;
+  letter-spacing: 0.8px;
+}
+
+/* Celdas */
+.standings-table th, 
+.standings-table td {
+  padding: 10px;
+  text-align: center;
+  border-bottom: 1px solid #1e2730;
+}
+
+/* Hover fila */
+.standings-table tbody tr:hover {
+  background: #1a242f;
+  cursor: pointer;
+}
+
+/* Primera columna - puesto */
+.standings-table tbody td:first-child {
+  font-weight: bold;
+  color: #2ecc71;
+}
+
+/* Nombre jugador */
+.standings-table tbody td:nth-child(2) {
+  text-align: left;
+  text-transform: capitalize;
+  font-weight: 500;
+  color: #ffffff;
+}
+
+/* Resaltar líder */
+.standings-table tbody tr:first-child {
+  background: #12251a;
+  font-weight: bold;
+}
+
+/* Responsive */
+@media(max-width: 700px){
+  .standings-table th:nth-child(3),
+  .standings-table th:nth-child(4),
+  .standings-table th:nth-child(5),
+  .standings-table th:nth-child(6),
+  .standings-table th:nth-child(7),
+  .standings-table td:nth-child(3),
+  .standings-table td:nth-child(4),
+  .standings-table td:nth-child(5),
+  .standings-table td:nth-child(6),
+  .standings-table td:nth-child(7){
+    display: none;
+  }
+}
