@@ -69,19 +69,48 @@ function Historial() {
       ) : (
         <>
           {/* Navigation */}
-          <Stack direction="row" justifyContent="center" alignItems="center" spacing={2} sx={{ mb: 2 }}>
-            <IconButton onClick={goPrev} disabled={currentIndex === matches.length - 1}>
-              <ArrowBackIosNewIcon sx={{ color: "#72ffa9" }} />
+          <Stack
+            direction="row"
+            justifyContent="center"
+            alignItems="center"
+            spacing={2}
+            sx={{ mb: 2 }}
+          >
+            {/* Flecha izquierda */}
+            <IconButton
+              onClick={goPrev}
+              disabled={currentIndex === matches.length - 1}
+            >
+              <ArrowBackIosNewIcon
+                sx={{
+                  color:
+                    currentIndex === matches.length - 1
+                      ? "rgba(114,255,169,0.3)" // gris verdoso apagado
+                      : "#72ffa9",
+                }}
+              />
             </IconButton>
 
             <Typography sx={{ fontSize: 17, fontWeight: 600 }}>
               Fecha {currentMatch.matchday}
             </Typography>
 
-            <IconButton onClick={goNext} disabled={currentIndex === 0}>
-              <ArrowForwardIosIcon sx={{ color: "#72ffa9" }} />
+            {/* Flecha derecha */}
+            <IconButton
+              onClick={goNext}
+              disabled={currentIndex === 0}
+            >
+              <ArrowForwardIosIcon
+                sx={{
+                  color:
+                    currentIndex === 0
+                      ? "rgba(114,255,169,0.3)" // gris verdoso apagado
+                      : "#72ffa9",
+                }}
+              />
             </IconButton>
           </Stack>
+
 
           {/* CARD */}
           <Paper
@@ -90,6 +119,9 @@ function Historial() {
               mb: 2,
               backgroundColor: "#111418",
               borderLeft: "4px solid #2ecc71",
+              borderRight: "4px solid #2ecc71",
+              maxWidth: 600,          // ← Agregá esto
+              mx: "auto",             // ← Centrado real
             }}
           >
             {/* Resultado */}
@@ -101,29 +133,42 @@ function Historial() {
 
             <Divider sx={{ my: 1 }} />
 
-            {/* Equipo Rojo */}
-            <Typography sx={{ fontWeight: 600, mb: 0.5, color: "#ff6b6b" }}>
-              Equipo Rojo
-            </Typography>
-            <Stack direction="column" spacing={0.4} sx={{ mb: 1 }}>
-              {currentMatch.red.players?.map((id, i) => (
-                <Typography key={i} sx={{ fontSize: 14 }}>
-                  • {playersMap[id] || id}
+            <Stack
+              direction={{ xs: "column", sm: "row" }}
+              spacing={2}
+              sx={{ mt: 1, mb: 1 }}
+            >
+              {/* ROJO */}
+              <Box sx={{ flex: 1 }}>
+                <Typography sx={{ fontWeight: 600, mb: 0.5, color: "#ff6b6b" }}>
+                  Equipo Rojo
                 </Typography>
-              ))}
+
+                <Stack direction="column" spacing={0.4}>
+                  {currentMatch.red.players?.map((id, i) => (
+                    <Typography key={i} sx={{ fontSize: 14 }}>
+                      {i + 1}. {playersMap[id] || id}
+                    </Typography>
+                  ))}
+                </Stack>
+              </Box>
+
+              {/* AZUL */}
+              <Box sx={{ flex: 1 }}>
+                <Typography sx={{ fontWeight: 600, mb: 0.5, color: "#4da3ff" }}>
+                  Equipo Azul
+                </Typography>
+
+                <Stack direction="column" spacing={0.4}>
+                  {currentMatch.blue.players?.map((id, i) => (
+                    <Typography key={i} sx={{ fontSize: 14 }}>
+                      {i + 1}. {playersMap[id] || id}
+                    </Typography>
+                  ))}
+                </Stack>
+              </Box>
             </Stack>
 
-            {/* Equipo Azul */}
-            <Typography sx={{ fontWeight: 600, mb: 0.5, color: "#4da3ff" }}>
-              Equipo Azul
-            </Typography>
-            <Stack direction="column" spacing={0.4} sx={{ mb: 1 }}>
-              {currentMatch.blue.players?.map((id, i) => (
-                <Typography key={i} sx={{ fontSize: 14 }}>
-                  • {playersMap[id] || id}
-                </Typography>
-              ))}
-            </Stack>
 
             {/* Tarjetas */}
             {currentMatch.cards?.length > 0 && (
@@ -143,7 +188,6 @@ function Historial() {
                       }
                       sx={{
                         width: "fit-content",
-                        backgroundColor: c.type === "yellow" ? "#bfa006" : "#b22727",
                         color: "#fff",
                         fontSize: 13,
                         fontWeight: 600,

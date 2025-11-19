@@ -20,8 +20,9 @@ function Navbar() {
       <strong>Los Simios de Estadio</strong>
 
       <Link style={linkStyle} to="/">Clausura 25</Link>
-      <Link style={linkStyle} to="/descensos">Descensos</Link>
+      {/* Eliminado Descensos */}
       <Link style={linkStyle} to="/historial">Historial</Link>
+      <Link style={linkStyle} to="/admin/import-apertura25">Importar A25</Link>
 
       <span style={{ marginLeft: "auto", display: "flex", gap: "15px", alignItems: "center" }}>
         {user ? (

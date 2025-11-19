@@ -7,6 +7,8 @@ import Descensos from "./pages/Descensos.jsx";
 import Historial from "./pages/Historial.jsx";
 import AdminLogin from "./pages/AdminLogin.jsx";
 import AdminMatch from "./pages/AdminMatch.jsx";
+import ImportApertura25 from "./tools/ImportApertura25.jsx";
+
 
 function PrivateRoute({ children }) {
   const { user } = useAuth();
@@ -15,12 +17,15 @@ function PrivateRoute({ children }) {
 
 function App() {
   return (
-    <div style={{ background: "#0d1117", minHeight: "100vh" }}>
+    <div style={{ background: "#242e3a", minHeight: "100vh" }}>
       <Navbar />
       <Routes>
         <Route path="/" element={<Clausura />} />
         <Route path="/descensos" element={<Descensos />} />
         <Route path="/historial" element={<Historial />} />
+        <Route path="/admin/import-apertura25" element={<ImportApertura25 />} />
+
+
 
         {/* Login */}
         <Route path="/admin" element={<AdminLogin />} />
