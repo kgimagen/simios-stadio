@@ -47,6 +47,10 @@ function AdminMatch() {
 
   const [status, setStatus] = useState("");
 
+  const [captainRed, setCaptainRed] = useState(null);
+  const [captainBlue, setCaptainBlue] = useState(null);
+
+
   // Cargar lista de jugadores desde Firestore
   useEffect(() => {
     const loadPlayers = async () => {
@@ -184,11 +188,13 @@ function AdminMatch() {
       createdAt: serverTimestamp(),
       red: {
         goals: gR,
-        players: teamRed.map((p) => p.id)
+        players: teamRed.map((p) => p.id),
+        captain: captainRed
       },
       blue: {
         goals: gB,
-        players: teamBlue.map((p) => p.id)
+        players: teamBlue.map((p) => p.id),
+        captain: captainBlue
       },
       cards: cards.map((c) => ({
         playerId: c.playerId,
@@ -196,6 +202,7 @@ function AdminMatch() {
         matches: c.matches ?? null,
       })),
     };
+
 
     try {
       await addDoc(
@@ -283,6 +290,18 @@ function AdminMatch() {
             )}
           />
 
+          <Typography sx={{ mt: 2, fontWeight: 600, color: "#ff6b6b" }}>
+            Capitán Rojo
+          </Typography>
+
+          <Autocomplete
+            options={teamRed}
+            getOptionLabel={(opt) => opt.label}
+            onChange={(_, value) => setCaptainRed(value?.id || null)}
+            renderInput={(params) => (
+              <TextField {...params} label="Seleccionar capitán" size="small" />
+            )}
+          />
 
 
           <Box sx={{ mt: 2 }}>
@@ -351,6 +370,18 @@ function AdminMatch() {
             )}
           />
 
+          <Typography sx={{ mt: 2, fontWeight: 600, color: "#4da3ff" }}>
+            Capitán Azul
+          </Typography>
+
+          <Autocomplete
+            options={teamBlue}
+            getOptionLabel={(opt) => opt.label}
+            onChange={(_, value) => setCaptainBlue(value?.id || null)}
+            renderInput={(params) => (
+              <TextField {...params} label="Seleccionar capitán" size="small" />
+            )}
+          />
 
 
           <Box sx={{ mt: 2 }}>

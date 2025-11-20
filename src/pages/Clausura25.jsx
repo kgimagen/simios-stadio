@@ -7,21 +7,26 @@ function Clausura25() {
   const [rows, setRows] = useState([]);
   const [promRows, setPromRows] = useState([]);
   const [cl25Total, setCl25Total] = useState(0);
+  const [resultRows, setResultRows] = useState([]);
 
   useEffect(() => {
     const unsub = onSnapshot(
       collection(db, "tournaments", "clausura25", "matches"),
       async (snapshot) => {
-
         // 1️⃣ Leer todos los partidos cargados
-        const matches = snapshot.docs.map((doc) => doc.data());
+        const matches = snapshot.docs.map((docSnap) => ({
+          id: docSnap.id,
+          ...docSnap.data(),
+        }));
 
         // 2️⃣ Obtener jugadores
         const playersSnap = await getDocs(collection(db, "players"));
-        const players = playersSnap.docs.map((doc) => ({
-          id: doc.id,
-          ...doc.data(),
+        const players = playersSnap.docs.map((docSnap) => ({
+          id: docSnap.id,
+          ...docSnap.data(),
         }));
+
+
 
         // 3️⃣ Inicializar estadísticas por jugador
         const stats = {};
@@ -42,18 +47,36 @@ function Clausura25() {
         });
 
         // 4️⃣ Procesar cada partido (ordenados por fecha)
-        matches.sort((a, b) => a.matchday - b.matchday);
+        matches.sort((a, b) => (a.matchday || 0) - (b.matchday || 0));
 
         matches.forEach((match) => {
-          const redGoals = match.red.goals;
-          const blueGoals = match.blue.goals;
-          const redPlayers = match.red.players || [];
-          const bluePlayers = match.blue.players || [];
+          const redGoals = match.red?.goals ?? 0;
+          const blueGoals = match.blue?.goals ?? 0;
+
+          const rawRedPlayers = match.red?.players || [];
+          const rawBluePlayers = match.blue?.players || [];
+
+          // Normalizar: si el array trae IDs, se usan; si trae nombres, se mapean a IDs
+          function normalizePlayers(arr) {
+            return arr
+              .map((val) => {
+                const raw = String(val).trim();
+                // si el raw coincide EXACTO con un ID de players
+                if (stats[raw]) return raw;
+                return null;
+              })
+              .filter(Boolean);
+          }
+
+
+
+          const redIds = normalizePlayers(rawRedPlayers);
+          const blueIds = normalizePlayers(rawBluePlayers);
 
           // Tarjetas
           if (Array.isArray(match.cards)) {
             match.cards.forEach((card) => {
-              if (!stats[card.playerId]) return;
+              if (!card?.playerId || !stats[card.playerId]) return;
 
               if (card.type === "yellow") {
                 stats[card.playerId].card = "yellow";
@@ -61,42 +84,44 @@ function Clausura25() {
 
               if (card.type === "red") {
                 stats[card.playerId].card = "red";
-                stats[card.playerId].cardUntil = match.matchday + (card.matches || 1);
+                stats[card.playerId].cardUntil =
+                  (match.matchday || 0) + (card.matches || 1);
               }
             });
           }
 
-          // Goles
-          redPlayers.forEach((id) => {
+          // Goles a favor / en contra
+          redIds.forEach((id) => {
             stats[id].gf += redGoals;
             stats[id].gc += blueGoals;
           });
 
-          bluePlayers.forEach((id) => {
+          blueIds.forEach((id) => {
             stats[id].gf += blueGoals;
             stats[id].gc += redGoals;
           });
 
-          // Resultado
+          // Resultado (PG / PE / PP)
           if (redGoals > blueGoals) {
-            redPlayers.forEach((id) => stats[id].wins++);
-            bluePlayers.forEach((id) => stats[id].losses++);
+            redIds.forEach((id) => stats[id].wins++);
+            blueIds.forEach((id) => stats[id].losses++);
           } else if (redGoals < blueGoals) {
-            bluePlayers.forEach((id) => stats[id].wins++);
-            redPlayers.forEach((id) => stats[id].losses++);
+            blueIds.forEach((id) => stats[id].wins++);
+            redIds.forEach((id) => stats[id].losses++);
           } else {
-            redPlayers.forEach((id) => stats[id].draws++);
-            bluePlayers.forEach((id) => stats[id].draws++);
+            redIds.forEach((id) => stats[id].draws++);
+            blueIds.forEach((id) => stats[id].draws++);
           }
 
-          // Last 5
+          // Last 5 (V / E / D / A)
           Object.keys(stats).forEach((id) => {
-            if (redPlayers.includes(id) || bluePlayers.includes(id)) {
+            const jugo = redIds.includes(id) || blueIds.includes(id);
+            if (jugo) {
               if (redGoals === blueGoals) {
                 stats[id].last5.push("E");
               } else if (
-                (redGoals > blueGoals && redPlayers.includes(id)) ||
-                (blueGoals > redGoals && bluePlayers.includes(id))
+                (redGoals > blueGoals && redIds.includes(id)) ||
+                (blueGoals > redGoals && blueIds.includes(id))
               ) {
                 stats[id].last5.push("V");
               } else {
@@ -113,7 +138,11 @@ function Clausura25() {
           s.diff = s.gf - s.gc;
           s.points = s.wins * 3 + s.draws;
           s.last5 = s.last5.slice(-5);
+
+          // 🔥 CALCULAR PJ Y GUARDARLO EN LA FILA
+          s.played = s.wins + s.draws + s.losses;
         });
+
 
         // 6️⃣ Convertir a array
         const merged = Object.values(stats);
@@ -126,30 +155,65 @@ function Clausura25() {
         });
 
         // 8️⃣ Numerar posiciones Clausura
-        merged.forEach((p, i) => (p.position = i + 1));
-
-        setRows(merged);
+        merged.forEach((p, i) => {
+          p.position = i + 1;
+        });
 
         // Total fechas Clausura
         const cl25_total =
           matches.length > 0
-            ? Number(Math.max(...matches.map((m) => m.matchday || 0)))
+            ? Number(
+                Math.max(
+                  ...matches.map((m) =>
+                    m.matchday != null ? m.matchday : 0
+                  )
+                )
+              )
             : 0;
 
         setCl25Total(cl25_total);
+
+        // ========================================================
+        // >>>>>>   TABLA RESULTADOS   <<<<<<
+        // ========================================================
+        const resultsMapped = matches.map((m) => {
+          const redCapFound = players.find(
+            (p) => p.id === m.red?.captain || p.name === m.red?.captain
+          );
+          const blueCapFound = players.find(
+            (p) => p.id === m.blue?.captain || p.name === m.blue?.captain
+          );
+
+          const redCap =
+            redCapFound?.name || m.red?.captain || "-";
+          const blueCap =
+            blueCapFound?.name || m.blue?.captain || "-";
+
+          return {
+            id: m.id,
+            matchday: m.matchday,
+            capRed: redCap,
+            capBlue: blueCap,
+            score: `${m.red?.goals ?? 0} - ${m.blue?.goals ?? 0}`,
+          };
+        });
 
         // ========================================================
         // >>>>>>   TABLA DE PROMEDIOS (TV24 + AP25 + CL25)  <<<<<<
         // ========================================================
 
         // Verano 24
-        const veranoDoc = await getDoc(doc(db, "tournaments", "verano24_summary"));
+        const veranoDoc = await getDoc(
+          doc(db, "tournaments", "verano24_summary")
+        );
         const tv24_total = veranoDoc.exists()
           ? Number(veranoDoc.data().totalMatchdays || 0)
           : 0;
 
         // Apertura 25
-        const aperturaDoc = await getDoc(doc(db, "tournaments", "apertura25_summary"));
+        const aperturaDoc = await getDoc(
+          doc(db, "tournaments", "apertura25_summary")
+        );
         const ap25_total = aperturaDoc.exists()
           ? Number(aperturaDoc.data().totalMatchdays || 0)
           : 0;
@@ -200,7 +264,8 @@ function Clausura25() {
 
           const totalPts = tv24_pts + ap25_pts + cl25_pts;
 
-          const prom = pj > 0 ? Number((totalPts / pj).toFixed(3)) : 0;
+          const prom =
+            pj > 0 ? Number((totalPts / pj).toFixed(3)) : 0;
 
           return {
             id: p.id,
@@ -220,7 +285,33 @@ function Clausura25() {
           x.isLast4 = i >= promList.length - 4;
         });
 
+        // ===========================================
+        // ULTIMOS 4 EN POSICIONES (excluyendo Promedios)
+        // ===========================================
+        const last4PromNames = new Set(
+          promList.slice(-4).map((p) => p.name)
+        );
+
+        // Recorrer POSICIONES desde abajo hacia arriba
+        const posicionesFiltered = merged.slice().reverse();
+
+        const posicionesLast4 = [];
+        for (const p of posicionesFiltered) {
+          if (!last4PromNames.has(p.name)) {
+            posicionesLast4.push(p.id);
+            if (posicionesLast4.length === 4) break;
+          }
+        }
+
+        // Agregar flag a cada jugador de POSICIONES
+        merged.forEach((p) => {
+          p.isLast4pos = posicionesLast4.includes(p.id);
+        });
+
+        // Actualizar estados (último paso)
+        setRows(merged);
         setPromRows(promList);
+        setResultRows(resultsMapped);
       }
     );
 
@@ -229,7 +320,13 @@ function Clausura25() {
 
   // Columnas Clausura
   const columns = [
-    { field: "position", headerName: "#", width: 55, headerAlign: "left", align: "center" },
+    {
+      field: "position",
+      headerName: "#",
+      width: 55,
+      headerAlign: "left",
+      align: "center",
+    },
     {
       field: "card",
       headerName: "T",
@@ -242,7 +339,24 @@ function Clausura25() {
         return "–";
       },
     },
-    { field: "name", headerName: "JUGADOR", width: 165, align: "left" },
+    {
+      field: "name",
+      headerName: "JUGADOR",
+      width: 165,
+      align: "left",
+      renderCell: (params) => {
+        const isLast4 = params.row.isLast4pos; // jugadores en azul oscuro
+        return (
+          <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+            <span>{params.row.name}</span>
+            {isLast4 && (
+              <span style={{ color: "#ff0000ff", fontSize: 16 }}>⬇️</span>
+            )}
+          </div>
+        );
+      },
+    },
+
     { field: "points", headerName: "PTS", width: 65, align: "center" },
     { field: "wins", headerName: "PG", width: 55, align: "center" },
     { field: "draws", headerName: "PE", width: 55, align: "center" },
@@ -252,12 +366,9 @@ function Clausura25() {
       field: "played",
       headerName: "PJ",
       width: 55,
-      align: "center",
-      valueGetter: (params) => {
-        const row = params?.row ?? {};
-        return (row.wins ?? 0) + (row.draws ?? 0) + (row.losses ?? 0);
-      },
+      align: "center"
     },
+
     {
       field: "last5",
       headerName: "ÚLTIMAS 5",
@@ -272,28 +383,34 @@ function Clausura25() {
             height: "100%",
           }}
         >
-          {p.row.last5?.slice().reverse().map((r, i) => (
-            <span
-              key={i}
-              style={{
-                width: 18,
-                height: 18,
-                borderRadius: 3,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                fontSize: 12,
-                background:
-                  r === "V" ? "green" :
-                  r === "D" ? "red" :
-                  r === "E" ? "yellow" :
-                  "#666",
-                color: r === "E" ? "#000" : "#fff",
-              }}
-            >
-              {r}
-            </span>
-          ))}
+          {p.row.last5
+            ?.slice()
+            .reverse()
+            .map((r, i) => (
+              <span
+                key={i}
+                style={{
+                  width: 18,
+                  height: 18,
+                  borderRadius: 3,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontSize: 12,
+                  background:
+                    r === "V"
+                      ? "green"
+                      : r === "D"
+                      ? "red"
+                      : r === "E"
+                      ? "yellow"
+                      : "#666",
+                  color: r === "E" ? "#000" : "#fff",
+                }}
+              >
+                {r}
+              </span>
+            ))}
         </div>
       ),
     },
@@ -302,12 +419,36 @@ function Clausura25() {
   // Columnas Promedios
   const promColumns = [
     { field: "position", headerName: "#", width: 55, align: "center" },
-    { field: "name", headerName: "JUGADOR", width: 165 },
+    {
+      field: "name",
+      headerName: "JUGADOR",
+      width: 165,
+      align: "left",
+      renderCell: (params) => {
+        const isLast4 = params.row.isLast4; // ✔ últimos 4 en PROMEDIOS
+        return (
+          <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+            <span>{params.row.name}</span>
+            {isLast4 && (
+              <span style={{ color: "#ff0000", fontSize: 16 }}>⬇️</span>
+            )}
+          </div>
+        );
+      },
+    },
+
     { field: "tv24_pts", headerName: "TV24", width: 70, align: "center" },
     { field: "ap25_pts", headerName: "AP25", width: 70, align: "center" },
     { field: "cl25_pts", headerName: "CL25", width: 70, align: "center" },
     { field: "pj", headerName: "PJ", width: 70, align: "center" },
     { field: "prom", headerName: "PROM", width: 90, align: "center" },
+  ];
+
+  const resultColumns = [
+    { field: "matchday", headerName: "F", width: 50, sortable: false },
+    { field: "capRed", headerName: "ROJO", width: 120, sortable: false },
+    { field: "capBlue", headerName: "AZUL", width: 120, sortable: false },
+    { field: "score", headerName: "RESULTADO", width: 90, sortable: false },
   ];
 
   return (
@@ -321,13 +462,15 @@ function Clausura25() {
         marginTop: 20,
       }}
     >
-
-      {/* TABLA CLAUSURA */}
+      {/* TABLA POSICIONES */}
       <TablaTemplate
         title={`POSICIONES / FECHA ${cl25Total} DE 18`}
         rows={rows}
         columns={columns}
         height={650}
+        getRowClassName={(params) =>
+          params.row.isLast4pos ? "last4-row" : ""
+        }
       />
 
       {/* TABLA PROMEDIOS */}
@@ -341,6 +484,13 @@ function Clausura25() {
         }
       />
 
+      {/* TABLA RESULTADOS */}
+      <TablaTemplate
+        title="RESULTADOS"
+        rows={resultRows}
+        columns={resultColumns}
+        height={650}
+      />
     </div>
   );
 }

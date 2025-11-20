@@ -60,9 +60,22 @@ function Historial() {
 
   return (
     <Box sx={{ maxWidth: 900, mx: "auto", mt: 3, color: "#e2e2e2" }}>
-      <Typography variant="h5" sx={{ fontWeight: 700, mb: 2, textAlign: "center" }}>
+      <h2
+        style={{
+          background: "#191e25",
+          color: "#ffffff",
+          fontFamily: "Bebas Neue",
+          fontSize: "25px",
+          textAlign: "center",
+          textTransform: "uppercase",
+          padding: "5px 0",
+          marginBottom: "15px",
+          borderRadius: "8px",
+        }}
+      >
         Historial de Partidos
-      </Typography>
+      </h2>
+
 
       {matches.length === 0 ? (
         <Typography>No hay partidos registrados aún.</Typography>
@@ -85,8 +98,8 @@ function Historial() {
                 sx={{
                   color:
                     currentIndex === matches.length - 1
-                      ? "rgba(114,255,169,0.3)" // gris verdoso apagado
-                      : "#72ffa9",
+                      ? "#0b4a81"
+                      : "#4da3ff",
                 }}
               />
             </IconButton>
@@ -104,8 +117,8 @@ function Historial() {
                 sx={{
                   color:
                     currentIndex === 0
-                      ? "rgba(114,255,169,0.3)" // gris verdoso apagado
-                      : "#72ffa9",
+                      ? "#0b4a81"
+                      : "#4da3ff",
                 }}
               />
             </IconButton>
@@ -118,8 +131,8 @@ function Historial() {
               p: 2,
               mb: 2,
               backgroundColor: "#111418",
-              borderLeft: "4px solid #2ecc71",
-              borderRight: "4px solid #2ecc71",
+              borderLeft: "4px solid #ff6b6b",
+              borderRight: "4px solid #4da3ff",
               maxWidth: 600,          // ← Agregá esto
               mx: "auto",             // ← Centrado real
             }}

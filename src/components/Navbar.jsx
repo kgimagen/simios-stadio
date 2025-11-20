@@ -6,7 +6,7 @@ function Navbar() {
 
   const navStyle = {
     padding: "12px",
-    background: "#024b32",
+    background: "#191e25",
     color: "white",
     display: "flex",
     gap: "18px",
@@ -22,7 +22,6 @@ function Navbar() {
       <Link style={linkStyle} to="/">Clausura 25</Link>
       {/* Eliminado Descensos */}
       <Link style={linkStyle} to="/historial">Historial</Link>
-      <Link style={linkStyle} to="/admin/import-apertura25">Importar A25</Link>
 
       <span style={{ marginLeft: "auto", display: "flex", gap: "15px", alignItems: "center" }}>
         {user ? (

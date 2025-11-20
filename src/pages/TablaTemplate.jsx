@@ -47,6 +47,14 @@ function TablaTemplate({
           hideFooter
           hideFooterPagination
           hideFooterSelectedRowCount
+
+          // 🔥 DESACTIVAR TODOS LOS MENÚS Y ORDENAMIENTOS
+          disableColumnMenu
+          disableColumnFilter
+          disableColumnSelector
+          disableColumnSorting
+          sortingMode="none"
+
           getRowClassName={getRowClassName}
           columnBuffer={4}
           disableExtendRowFullWidth={true}
@@ -102,7 +110,33 @@ function TablaTemplate({
               color: "#fff !important",
               fontWeight: 600,
             },
+
+            // ============================
+            // ESTILOS PERSONALIZADOS RESULTADOS
+            // ============================
+
+            // Fondo columna F
+            "& .MuiDataGrid-cell[data-field='matchday']": {
+              backgroundColor: "#0b5394 !important",
+            },
+
+            // Fondo capitán ROJO
+            "& .MuiDataGrid-cell[data-field='capRed']": {
+              backgroundColor: "#5b0f00 !important",
+            },
+
+            // Fondo capitán AZUL
+            "& .MuiDataGrid-cell[data-field='capBlue']": {
+              backgroundColor: "#073763 !important",
+            },
+
+            // Fondo RESULTADO
+            "& .MuiDataGrid-cell[data-field='score']": {
+              backgroundColor: "#242e3a !important",
+            },
+
           }}
+
         />
       </div>
     </div>
