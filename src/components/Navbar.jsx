@@ -13,37 +13,120 @@ function Navbar() {
     alignItems: "center",
   };
 
-  const linkStyle = { color: "white", textDecoration: "none" };
+  const linkButton = {
+    padding: "6px 12px",
+    borderRadius: "6px",
+    background: "rgba(255,255,255,0.05)",
+    color: "white",
+    textDecoration: "none",
+    fontFamily: "Bebas Neue",
+    fontSize: "18px",
+    letterSpacing: "0.5px",
+    transition: "0.2s",
+  };
+
+  const linkButtonHover = {
+    background: "#4da3ff",
+    color: "#000",
+  };
 
   return (
     <nav style={navStyle}>
-      <strong>Los Simios de Estadio</strong>
+      {/* Botones del menú */}
+      <Link
+        to="/"
+        style={linkButton}
+        onMouseOver={(e) =>
+          Object.assign(e.target.style, linkButtonHover)
+        }
+        onMouseOut={(e) =>
+          Object.assign(e.target.style, linkButton)
+        }
+      >
+        Tabla de Posiciones / Clausura 25
+      </Link>
 
-      <Link style={linkStyle} to="/">Clausura 25</Link>
-      {/* Eliminado Descensos */}
-      <Link style={linkStyle} to="/historial">Historial</Link>
+      <Link
+        to="/historial"
+        style={linkButton}
+        onMouseOver={(e) =>
+          Object.assign(e.target.style, linkButtonHover)
+        }
+        onMouseOut={(e) =>
+          Object.assign(e.target.style, linkButton)
+        }
+      >
+        Historial de Partidos
+      </Link>
 
-      <span style={{ marginLeft: "auto", display: "flex", gap: "15px", alignItems: "center" }}>
+      {user && (
+        <Link
+          to="/admin/match"
+          style={linkButton}
+          onMouseOver={(e) =>
+            Object.assign(e.target.style, linkButtonHover)
+          }
+          onMouseOut={(e) =>
+            Object.assign(e.target.style, linkButton)
+          }
+        >
+          Cargar Fecha
+        </Link>
+      )}
+
+      {/* Panel derecho */}
+      <span
+        style={{
+          marginLeft: "auto",
+          display: "flex",
+          gap: "15px",
+          alignItems: "center",
+        }}
+      >
         {user ? (
           <>
-            <Link style={linkStyle} to="/admin/panel">Cargar Fecha</Link>
             <span>Hola, {user.displayName || user.email}</span>
-            <button 
+
+            <button
               onClick={logout}
-              style={{ 
+              style={{
+                padding: "6px 12px",
                 background: "transparent",
                 border: "1px solid white",
                 color: "white",
-                padding: "5px 10px",
                 cursor: "pointer",
-                borderRadius: "5px"
+                borderRadius: "6px",
+                fontFamily: "Bebas Neue",
+                fontSize: "16px",
+                transition: "0.2s",
+              }}
+              onMouseOver={(e) => {
+                e.target.style.background = "#ff4d4d";
+                e.target.style.color = "#000";
+                e.target.style.borderColor = "#ff4d4d";
+              }}
+              onMouseOut={(e) => {
+                e.target.style.background = "transparent";
+                e.target.style.color = "white";
+                e.target.style.borderColor = "white";
               }}
             >
               Salir
             </button>
           </>
         ) : (
-          <Link style={linkStyle} to="/admin">Admin</Link>
+          <Link
+            to="/admin"
+            style={linkButton}
+            onMouseOver={(e) =>
+              Object.assign(e.target.style, linkButtonHover)
+            }
+            onMouseOut={(e) =>
+              Object.assign(e.target.style, linkButton)
+            }
+          >
+            Iniciar sesión
+          </Link>
         )}
       </span>
     </nav>

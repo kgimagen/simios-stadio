@@ -13,6 +13,22 @@ import {
 import ArrowBackIosNewIcon from "@mui/icons-material/ArrowBackIosNew";
 import ArrowForwardIosIcon from "@mui/icons-material/ArrowForwardIos";
 
+function isCaptain(team, playerId, playersMap) {
+  if (!team?.captain) return false;
+
+  const cap = team.captain;
+
+  // Caso 1: El capitán está guardado como ID
+  if (cap === playerId) return true;
+
+  // Caso 2: El capitán está guardado como NOMBRE
+  const playerName = playersMap[playerId];
+  if (playerName && cap === playerName) return true;
+
+  return false;
+}
+
+
 function Historial() {
   const [matches, setMatches] = useState([]);
   const [playersMap, setPlayersMap] = useState({});
@@ -158,12 +174,43 @@ function Historial() {
                 </Typography>
 
                 <Stack direction="column" spacing={0.4}>
-                  {currentMatch.red.players?.map((id, i) => (
-                    <Typography key={i} sx={{ fontSize: 14 }}>
-                      {i + 1}. {playersMap[id] || id}
-                    </Typography>
-                  ))}
+                  {currentMatch.red.players?.map((id, i) => {
+                    let name = playersMap[id] || id;
+
+                    // Si es invitado (id no existe en playersMap), capitalizar visualmente
+                    if (!playersMap[id]) {
+                      name = name.charAt(0).toUpperCase() + name.slice(1);
+                    }
+
+                    const isCap = isCaptain(currentMatch.red, id, playersMap);
+                    const photo = `/players/${id}.jpg`;
+
+                    return (
+                      <div key={i} style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                        <img
+                          src={photo}
+                          alt={name}
+                          style={{
+                            width: 30,
+                            height: 30,
+                            borderRadius: 4,
+                            objectFit: "cover",
+                          }}
+                          onError={(e) => {
+                            e.target.src = "/players/default.jpg";
+                          }}
+                        />
+
+                        <Typography sx={{ fontSize: 14 }}>
+                          {i + 1}. {name} {isCap ? "👑" : ""}
+                        </Typography>
+                      </div>
+                    );
+                  })}
+
                 </Stack>
+
+
               </Box>
 
               {/* AZUL */}
@@ -173,12 +220,41 @@ function Historial() {
                 </Typography>
 
                 <Stack direction="column" spacing={0.4}>
-                  {currentMatch.blue.players?.map((id, i) => (
-                    <Typography key={i} sx={{ fontSize: 14 }}>
-                      {i + 1}. {playersMap[id] || id}
-                    </Typography>
-                  ))}
+                  {currentMatch.blue.players?.map((id, i) => {
+                    let name = playersMap[id] || id;
+
+                    if (!playersMap[id]) {
+                      name = name.charAt(0).toUpperCase() + name.slice(1);
+                    }
+                    const isCap = isCaptain(currentMatch.blue, id, playersMap);
+                    const photo = `/players/${id}.jpg`;
+
+                    return (
+                      <div key={i} style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                        <img
+                          src={photo}
+                          alt={name}
+                          style={{
+                            width: 30,
+                            height: 30,
+                            borderRadius: 4,
+                            objectFit: "cover",
+                          }}
+                          onError={(e) => {
+                            e.target.src = "/players/default.jpg";
+                          }}
+                        />
+
+                        <Typography sx={{ fontSize: 14 }}>
+                          {i + 1}. {name} {isCap ? "👑" : ""}
+                        </Typography>
+                      </div>
+                    );
+                  })}
+
                 </Stack>
+
+
               </Box>
             </Stack>
 

@@ -20,13 +20,20 @@ import {
   getDocs,
   addDoc,
   serverTimestamp,
+  deleteDoc,
+  doc
 } from "firebase/firestore";
+
 
 // Máximo jugadores por equipo
 const MAX_PLAYERS_PER_TEAM = 10;
 
 function AdminMatch() {
   const [players, setPlayers] = useState([]);
+  const [matches, setMatches] = useState([]);
+  const [matchToDelete, setMatchToDelete] = useState(null);
+  const [deleteStatus, setDeleteStatus] = useState("");
+
 
   const [matchday, setMatchday] = useState("");
 
@@ -70,6 +77,20 @@ function AdminMatch() {
     };
     loadPlayers();
   }, []);
+
+  // Cargar partidos existentes
+  useEffect(() => {
+    const loadMatches = async () => {
+      const snap = await getDocs(collection(db, "tournaments", "clausura25", "matches"));
+      const list = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      // Ordenar por fecha ascendente
+      list.sort((a, b) => a.matchday - b.matchday);
+      setMatches(list);
+    };
+
+    loadMatches();
+  }, []);
+
 
   const availablePlayers = players.map((p) => ({
     label: p.name || p.id,
@@ -227,6 +248,29 @@ function AdminMatch() {
     }
   };
 
+  const handleDeleteMatch = async () => {
+    if (!matchToDelete) {
+      setDeleteStatus("Seleccioná una fecha para borrar.");
+      return;
+    }
+
+    try {
+      await deleteDoc(
+        doc(db, "tournaments", "clausura25", "matches", matchToDelete.id)
+      );
+
+      setDeleteStatus(`Fecha ${matchToDelete.matchday} eliminada correctamente.`);
+
+      // Recargar lista
+      setMatches(matches.filter(m => m.id !== matchToDelete.id));
+      setMatchToDelete(null);
+
+    } catch (err) {
+      console.error(err);
+      setDeleteStatus("Error al borrar la fecha. Revisá la consola.");
+    }
+  };
+
 
   return (
     <Box sx={{ maxWidth: 900, mx: "auto", mt: 3, color: "#e2e2e2" }}>
@@ -236,7 +280,7 @@ function AdminMatch() {
 
       {/* Fecha */}
       <Paper sx={{ p: 2, mb: 3, backgroundColor: "#111418" }}>
-        <Typography sx={{ mb: 1, fontWeight: 600 }}>Fecha</Typography>
+        <Typography sx={{ mb: 1, fontWeight: 600 }}>🗓️ Fecha 🗓️</Typography>
         <TextField
           type="number"
           size="small"
@@ -247,59 +291,39 @@ function AdminMatch() {
         />
       </Paper>
 
+
+
+
       {/* Equipos */}
       <Stack direction={{ xs: "column", md: "row" }} spacing={2} sx={{ mb: 3 }}>
         {/* Equipo Rojo */}
         <Paper sx={{ flex: 1, p: 2, backgroundColor: "#111418" }}>
           <Typography sx={{ mb: 1, fontWeight: 600, color: "#ff6b6b" }}>
-            Equipo Rojo
+            🔴 Equipo Rojo 🔴
           </Typography>
 
           <Autocomplete
-            options={filteredPlayers}
+            freeSolo
+            options={filteredPlayers.map((p) => p.label)}
             inputValue={redSearch}
             onInputChange={(_, value) => setRedSearch(value)}
             value={null}
             onChange={(_, value) => {
-              addToRedTeam(value);
+              if (!value) return;
+
+              const exists = filteredPlayers.find((p) => p.label === value);
+
+              if (exists) {
+                addToRedTeam(exists);
+              } else {
+                // Invitado
+                addToRedTeam({ id: value.toLowerCase().replace(/\s+/g, "_"), label: value });
+              }
+
               setRedSearch("");
             }}
-            filterOptions={(options, state) => {
-              const text = state.inputValue.toLowerCase();
-              return options.filter(opt => opt.label.toLowerCase().includes(text));
-            }}
             renderInput={(params) => (
-              <TextField
-                {...params}
-                label="Agregar jugador"
-                size="small"
-                placeholder="Escribí para buscar..."
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    e.preventDefault();
-                    const matches = filteredPlayers.filter(p =>
-                      p.label.toLowerCase().includes(redSearch.toLowerCase())
-                    );
-                    if (matches.length > 0) {
-                      addToRedTeam(matches[0]);
-                      setRedSearch("");
-                    }
-                  }
-                }}
-              />
-            )}
-          />
-
-          <Typography sx={{ mt: 2, fontWeight: 600, color: "#ff6b6b" }}>
-            Capitán Rojo
-          </Typography>
-
-          <Autocomplete
-            options={teamRed}
-            getOptionLabel={(opt) => opt.label}
-            onChange={(_, value) => setCaptainRed(value?.id || null)}
-            renderInput={(params) => (
-              <TextField {...params} label="Seleccionar capitán" size="small" />
+              <TextField {...params} label="Agregar jugador (o invitado)" size="small" />
             )}
           />
 
@@ -332,54 +356,31 @@ function AdminMatch() {
         {/* Equipo Azul */}
         <Paper sx={{ flex: 1, p: 2, backgroundColor: "#111418" }}>
           <Typography sx={{ mb: 1, fontWeight: 600, color: "#4da3ff" }}>
-            Equipo Azul
+            🔵 Equipo Azul 🔵
           </Typography>
 
           <Autocomplete
-            options={filteredPlayers}
+            freeSolo
+            options={filteredPlayers.map((p) => p.label)}
             inputValue={blueSearch}
             onInputChange={(_, value) => setBlueSearch(value)}
             value={null}
             onChange={(_, value) => {
-              addToBlueTeam(value);
+              if (!value) return;
+
+              const exists = filteredPlayers.find((p) => p.label === value);
+
+              if (exists) {
+                addToBlueTeam(exists);
+              } else {
+                // Invitado
+                addToBlueTeam({ id: value.toLowerCase().replace(/\s+/g, "_"), label: value });
+              }
+
               setBlueSearch("");
             }}
-            filterOptions={(options, state) => {
-              const text = state.inputValue.toLowerCase();
-              return options.filter(opt => opt.label.toLowerCase().includes(text));
-            }}
             renderInput={(params) => (
-              <TextField
-                {...params}
-                label="Agregar jugador"
-                size="small"
-                placeholder="Escribí para buscar..."
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    e.preventDefault();
-                    const matches = filteredPlayers.filter(p =>
-                      p.label.toLowerCase().includes(blueSearch.toLowerCase())
-                    );
-                    if (matches.length > 0) {
-                      addToBlueTeam(matches[0]);
-                      setBlueSearch("");
-                    }
-                  }
-                }}
-              />
-            )}
-          />
-
-          <Typography sx={{ mt: 2, fontWeight: 600, color: "#4da3ff" }}>
-            Capitán Azul
-          </Typography>
-
-          <Autocomplete
-            options={teamBlue}
-            getOptionLabel={(opt) => opt.label}
-            onChange={(_, value) => setCaptainBlue(value?.id || null)}
-            renderInput={(params) => (
-              <TextField {...params} label="Seleccionar capitán" size="small" />
+              <TextField {...params} label="Agregar jugador (o invitado)" size="small" />
             )}
           />
 
@@ -410,9 +411,49 @@ function AdminMatch() {
         </Paper>
       </Stack>
 
+      {/* Capitanes (arriba de todo) */}
+      <Paper sx={{ p: 2, mb: 3, backgroundColor: "#111418" }}>
+
+        <Stack direction={{ xs: "column", md: "row" }} spacing={2}>
+          
+          {/* Capitán Rojo */}
+          <Box sx={{ flex: 1 }}>
+            <Typography sx={{ mb: 1, fontWeight: 600, color: "#ff6b6b" }}>
+              👑 Capitán Rojo 👑
+            </Typography>
+
+            <Autocomplete
+              options={[...teamRed]}  // solo jugadores cargados
+              getOptionLabel={(opt) => opt.label}
+              onChange={(_, value) => setCaptainRed(value?.id || null)}
+              renderInput={(params) => (
+                <TextField {...params} label="Seleccionar capitán" size="small" />
+              )}
+            />
+          </Box>
+
+          {/* Capitán Azul */}
+          <Box sx={{ flex: 1 }}>
+            <Typography sx={{ mb: 1, fontWeight: 600, color: "#4da3ff" }}>
+              👑 Capitán Azul 👑
+            </Typography>
+
+            <Autocomplete
+              options={[...teamBlue]}
+              getOptionLabel={(opt) => opt.label}
+              onChange={(_, value) => setCaptainBlue(value?.id || null)}
+              renderInput={(params) => (
+                <TextField {...params} label="Seleccionar capitán" size="small" />
+              )}
+            />
+          </Box>
+
+        </Stack>
+      </Paper>
+
       {/* Resultado */}
       <Paper sx={{ p: 2, mb: 3, backgroundColor: "#111418" }}>
-        <Typography sx={{ mb: 1, fontWeight: 600 }}>Resultado (goles)</Typography>
+        <Typography sx={{ mb: 1, fontWeight: 600 }}>⚽ Resultado ⚽</Typography>
         <Stack direction="row" spacing={2} alignItems="center">
           <TextField
             label="Rojo"
@@ -436,7 +477,7 @@ function AdminMatch() {
 
       {/* Tarjetas */}
       <Paper sx={{ p: 2, mb: 3, backgroundColor: "#111418" }}>
-        <Typography sx={{ mb: 1, fontWeight: 600 }}>Tarjetas</Typography>
+        <Typography sx={{ mb: 1, fontWeight: 600 }}>🟥 Tarjetas 🟨</Typography>
 
         <Stack
           direction={{ xs: "column", md: "row" }}
@@ -515,8 +556,6 @@ function AdminMatch() {
         </Box>
       </Paper>
 
-      <Divider sx={{ mb: 2 }} />
-
       {/* Estado + botón */}
       {status && (
         <Typography
@@ -529,6 +568,58 @@ function AdminMatch() {
       <Button variant="contained" color="primary" onClick={handleSaveMatch}>
         Cargar partido
       </Button>
+
+      {/* DIVISIÓN GRANDE */}
+      <Divider sx={{ my: 5, borderColor: "#555" }} />
+
+      {/* ELIMINAR PARTIDO */}
+      <Paper sx={{ p: 2, backgroundColor: "#111418", border: "1px solid #882b2b" }}>
+        <Typography sx={{ mb: 2, fontWeight: 700, color: "#ff4444" }}>
+          Eliminar Partido
+        </Typography>
+
+        <Typography sx={{ mb: 1 }}>
+          Seleccioná una fecha para eliminarla por completo:
+        </Typography>
+
+        <Autocomplete
+          options={matches}
+          getOptionLabel={(m) => `Fecha ${m.matchday}`}
+          value={matchToDelete}
+          onChange={(_, value) => setMatchToDelete(value)}
+          renderInput={(params) => (
+            <TextField
+              {...params}
+              label="Seleccionar fecha"
+              size="small"
+              placeholder="Elegí la fecha a borrar"
+            />
+          )}
+          sx={{ maxWidth: 300, mb: 2 }}
+        />
+
+        <Button
+          variant="contained"
+          color="error"
+          disabled={!matchToDelete}
+          onClick={handleDeleteMatch}
+        >
+          Eliminar Fecha
+        </Button>
+
+        {deleteStatus && (
+          <Typography
+            sx={{
+              mt: 2,
+              color: deleteStatus.startsWith("Error") ? "#ff7675" : "#55efc4",
+            }}
+          >
+            {deleteStatus}
+          </Typography>
+        )}
+      </Paper>
+
+
     </Box>
   );
 }
