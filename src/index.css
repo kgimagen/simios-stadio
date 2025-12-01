@@ -46,3 +46,33 @@ button:focus-visible {
   outline: 4px auto -webkit-focus-ring-color;
 }
 
+
+
+/* SOLO MOBILE: Menos de 768px */
+@media (max-width: 768px) {
+
+  /* Contenedor general */
+  .cl25-root {
+    width: 100% !important;
+    overflow-x: hidden !important;
+  }
+
+  /* Contenedor de tablas */
+  .cl25-container {
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  /* CADA TABLA */
+  .cl25-container > div {
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  /* Fix para DataGrid de MUI (ocupa más de 100% a veces) */
+  .MuiDataGrid-root {
+    max-width: 100% !important;
+    width: 100% !important;
+  }
+}

@@ -175,21 +175,21 @@ function TablaTemplate({
             },
 
             "& .MuiDataGrid-cell[data-field='score']": {
-              backgroundColor: "#242e3a !important",
+              backgroundColor: "#0b5394 !important",
             },
 
             "& .row-red-win .MuiDataGrid-cell": {
-              backgroundColor: "#5b0f00 !important",   // rojo victoria
+              backgroundColor: "#0b5394 !important",   // rojo victoria
               color: "#fff !important",
             },
 
             "& .row-blue-win .MuiDataGrid-cell": {
-              backgroundColor: "#073763 !important",   // azul victoria
+              backgroundColor: "#0b5394 !important",   // azul victoria
               color: "#fff !important",
             },
 
             "& .row-draw .MuiDataGrid-cell": {
-              backgroundColor: "#242e3a !important",   // el gris que usás en Resultados
+              backgroundColor: "#0b5394 !important",   // el gris que usás en Resultados
               color: "#fff !important",
             },
 

@@ -616,43 +616,16 @@ function Clausura25() {
   // ===========================
   const columns = [
     {
-      field: "trend",
-      headerName: "▲/▼",
-      width: 40,
-      sortable: false,
-      filterable: false,
-      align: "center",
-      headerAlign: "center",
-      renderCell: (params) => {
-        const t = params.row.trend;
-
-        const style = {
-          fontSize: 15,
-          fontWeight: 700,
-        };
-
-        if (t === "up") {
-          return <span style={{ ...style, color: "#00ff55" }}>▲</span>;
-        }
-
-        if (t === "down") {
-          return <span style={{ ...style, color: "#ff4444" }}>▼</span>;
-        }
-
-        return <span style={{ ...style, color: "#cccccc" }}>=</span>;
-      },
-    },
-    {
       field: "position",
       headerName: "#",
-      width: 55,
+      width: 40,
       align: "center",
       renderCell: (params) => `${params.row.position}.`,
     },
     {
       field: "name",
       headerName: "JUGADOR",
-      width: 200,
+      width: 230,
       align: "left",
       renderCell: (params) => {
         const playerId = params.row.id;
@@ -661,15 +634,42 @@ function Clausura25() {
         const isLast4 = params.row.isLast4pos;
         const card = params.row.card;
 
-        // Construir los iconos
+        // iconos: tarjetas + últimos 4
         let icons = "";
-
         if (card === "yellow") icons += "🟨";
         if (card === "red") icons += "🟥";
         if (isLast4) icons += "📉";
 
+        // flecha de tendencia
+        const trend = params.row.trend;
+        let arrow = "=";
+        let arrowColor = "#cccccc";
+
+        if (trend === "up") {
+          arrow = "▲";
+          arrowColor = "#00ff55";
+        } else if (trend === "down") {
+          arrow = "▼";
+          arrowColor = "#ff4444";
+        }
+
         return (
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            
+            {/* FLECHA PRIMERO */}
+            <span
+              style={{
+                color: arrowColor,
+                fontWeight: 700,
+                fontSize: 16,
+                width: 18,
+                textAlign: "center",
+              }}
+            >
+              {arrow}
+            </span>
+
+            {/* FOTO */}
             <img
               src={url}
               alt={params.row.name}
@@ -684,31 +684,36 @@ function Clausura25() {
               }}
             />
 
+            {/* NOMBRE + ICONOS */}
             <span>
-              {params.row.name}{icons && <span style={{ marginLeft: 5 }}>{icons}</span>}
+              {params.row.name}
+              {icons && <span style={{ marginLeft: 5 }}>{icons}</span>}
             </span>
+
           </div>
         );
       },
+
     },
 
 
-    { field: "points", headerName: "PTS", width: 65, align: "center" },
-    { field: "wins", headerName: "PG", width: 55, align: "center" },
-    { field: "draws", headerName: "PE", width: 55, align: "center" },
-    { field: "losses", headerName: "PP", width: 55, align: "center" },
-    { field: "diff", headerName: "DG+", width: 60, align: "center" },
+
+    { field: "points", headerName: "PTS", width: 40, align: "center" },
+    { field: "wins", headerName: "PG", width: 40, align: "center" },
+    { field: "draws", headerName: "PE", width: 40, align: "center" },
+    { field: "losses", headerName: "PP", width: 40, align: "center" },
+    { field: "diff", headerName: "DG+", width: 40, align: "center" },
     {
       field: "played",
       headerName: "PJ",
-      width: 55,
+      width: 40,
       align: "center",
     },
 
     {
       field: "last5",
       headerName: "ÚLTIMAS 5",
-      width: 160,
+      width: 140,
       renderCell: (p) => (
         <div
           style={{
@@ -757,29 +762,6 @@ function Clausura25() {
   // ===========================
   const promColumns = [
     {
-      field: "trendProm",
-      headerName: "▲/▼",
-      width: 40,
-      align: "center",
-      headerAlign: "center",
-      sortable: false,
-      filterable: false,
-      renderCell: (params) => {
-        const t = params.row.trendProm;
-
-        const style = {
-          fontSize: 15,
-          fontWeight: 700,
-        };
-
-        if (t === "up")
-          return <span style={{ ...style, color: "#00ff55" }}>▲</span>;
-        if (t === "down")
-          return <span style={{ ...style, color: "#ff4444" }}>▼</span>;
-        return <span style={{ ...style, color: "#cccccc" }}>=</span>;
-      },
-    },
-    {
       field: "position",
       headerName: "#",
       width: 55,
@@ -790,16 +772,44 @@ function Clausura25() {
     {
       field: "name",
       headerName: "JUGADOR",
-      width: 200,
+      width: 230,
       align: "left",
       renderCell: (params) => {
         const playerId = params.row.id;
         const url = `/players/${playerId}.jpg`;
 
-        const isLast4 = params.row.isLast4; // ✔ correcto para promedios
+        const isLast4 = params.row.isLast4; // último 4 en promedios
+
+        // flecha de tendencia
+        const trend = params.row.trendProm;
+        let arrow = "=";
+        let arrowColor = "#cccccc";
+
+        if (trend === "up") {
+          arrow = "▲";
+          arrowColor = "#00ff55";
+        } else if (trend === "down") {
+          arrow = "▼";
+          arrowColor = "#ff4444";
+        }
 
         return (
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+
+            {/* FLECHA PRIMERO */}
+            <span
+              style={{
+                color: arrowColor,
+                fontWeight: 700,
+                fontSize: 16,
+                width: 18,
+                textAlign: "center",
+              }}
+            >
+              {arrow}
+            </span>
+
+            {/* FOTO */}
             <img
               src={url}
               alt={params.row.name}
@@ -814,32 +824,37 @@ function Clausura25() {
               }}
             />
 
-            <span>{params.row.name}</span>
+            {/* NOMBRE + ICONO ÚLTIMOS 4 */}
+            <span>
+              {params.row.name}
+              {isLast4 && (
+                <span style={{ color: "#ff0000", fontSize: 16, marginLeft: 5 }}>
+                  📉
+                </span>
+              )}
+            </span>
 
-            {isLast4 && (
-              <span style={{ color: "#ff0000", fontSize: 16 }}>📉</span>
-            )}
           </div>
         );
       },
     },
 
-
-    { field: "tv24_pts", headerName: "TV24", width: 70, align: "center" },
-    { field: "ap25_pts", headerName: "AP25", width: 70, align: "center" },
-    { field: "cl25_pts", headerName: "CL25", width: 70, align: "center" },
-    { field: "pj", headerName: "PJ", width: 70, align: "center" },
-    { field: "prom", headerName: "PROM", width: 90, align: "center" },
+    { field: "tv24_pts", headerName: "TV24", width: 40, align: "center" },
+    { field: "ap25_pts", headerName: "AP25", width: 40, align: "center" },
+    { field: "cl25_pts", headerName: "CL25", width: 40, align: "center" },
+    { field: "pj", headerName: "PJ", width: 40, align: "center" },
+    { field: "prom", headerName: "PROM", width: 70, align: "center" },
   ];
 
+
   // ===========================
-  // Columnas Resultados
+  // Columnas Resultados de Capitanes
   // ===========================
   const resultColumns = [
     {
       field: "matchday",
       headerName: "F",
-      width: 50,
+      width: 30,
       sortable: false,
       align: "center",
       renderCell: (params) => `${params.row.matchday}.`,
@@ -849,7 +864,7 @@ function Clausura25() {
     {
       field: "capRed",
       headerName: "CAPITAN ROJO",
-      width: 180,
+      width: 160,
       sortable: false,
       renderCell: (params) => {
         const id = params.row.capRedId;
@@ -869,14 +884,14 @@ function Clausura25() {
                 borderRadius: 4,
                 objectFit: "cover",
                 filter: lost ? "grayscale(100%)" : "none",
-                opacity: lost ? 0.4 : 1,
+                opacity: lost ? 0.5 : 1,
               }}
               onError={(e) => (e.target.src = "/players/default.jpg")}
             />
 
             <span
               style={{
-                opacity: lost ? 0.4 : 1,
+                opacity: lost ? 0.5 : 1,
               }}
             >
               {name}
@@ -893,7 +908,7 @@ function Clausura25() {
     {
       field: "capBlue",
       headerName: "CAPITAN AZUL",
-      width: 180,
+      width: 160,
       sortable: false,
       renderCell: (params) => {
         const id = params.row.capBlueId;
@@ -913,14 +928,14 @@ function Clausura25() {
                 borderRadius: 4,
                 objectFit: "cover",
                 filter: lost ? "grayscale(100%)" : "none",
-                opacity: lost ? 0.4 : 1,
+                opacity: lost ? 0.5 : 1,
               }}
               onError={(e) => (e.target.src = "/players/default.jpg")}
             />
 
             <span
               style={{
-                opacity: lost ? 0.4 : 1,
+                opacity: lost ? 0.5 : 1,
               }}
             >
               {name}
@@ -935,7 +950,7 @@ function Clausura25() {
     {
       field: "score",
       headerName: "RESULTADO",
-      width: 90,
+      width: 100,
       sortable: false,
     },
   ];
@@ -961,7 +976,7 @@ function Clausura25() {
 
 
   return (
-    <div style={{ scale: "0.85", transformOrigin: "top center" }}>
+    <div className="cl25-root" style={{ scale: "0.85", transformOrigin: "top center" }}>
 
       {/* HEADER CON IMAGEN */}
       <div
@@ -983,12 +998,12 @@ function Clausura25() {
 
       {/* CONTENEDOR DE LAS 3 TABLAS */}
       <div
+        className="cl25-container"
         style={{
           display: "flex",
-          flexDirection: window.innerWidth < 768 ? "column" : "row",
           justifyContent: "center",
           alignItems: "center",
-          gap: window.innerWidth < 768 ? "20px" : "50px",
+          gap: "50px",
           width: "100%",
           marginTop: 20,
         }}
