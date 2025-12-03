@@ -3,7 +3,6 @@
   color: #e2e2e2 !important;
 }
 
-
 a {
   font-weight: 500;
   color: #646cff;
@@ -20,7 +19,6 @@ body {
   background: #0d1117 !important;
   color: #e2e2e2 !important;
 }
-
 
 h1 {
   font-size: 3.2em;
@@ -46,33 +44,74 @@ button:focus-visible {
   outline: 4px auto -webkit-focus-ring-color;
 }
 
-
-
-/* SOLO MOBILE: Menos de 768px */
+/* ============================================================
+   MOBILE — MENOS DE 768px
+   ============================================================ */
 @media (max-width: 768px) {
 
   /* Contenedor general */
   .cl25-root {
     width: 100% !important;
     overflow-x: hidden !important;
+    padding: 0 !important;
+    margin: 0 !important;
   }
 
-  /* Contenedor de tablas */
+  /* Contenedor de las 3 tablas */
   .cl25-container {
     width: 100% !important;
     max-width: 100% !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    gap: 30px !important;
     box-sizing: border-box !important;
   }
 
-  /* CADA TABLA */
-  .cl25-container > div {
+  /* Cada tabla envuelta */
+  .table-wrapper {
     width: 100% !important;
     max-width: 100% !important;
+    padding-left: 12px !important;   /* AIRE IZQUIERDA */
+    padding-right: 12px !important;  /* AIRE DERECHA */
+    box-sizing: border-box !important;
   }
 
-  /* Fix para DataGrid de MUI (ocupa más de 100% a veces) */
-  .MuiDataGrid-root {
-    max-width: 100% !important;
+  /* HEADER FIJO */
+  .tabla-header-fixed {
     width: 100% !important;
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 20 !important;
+    background: #1a1f27 !important;
+    padding-left: 10px !important;
+    padding-right: 10px !important;
+    box-sizing: border-box !important;
+  }
+
+  /* SOLO cuerpo scrolleable */
+  .tabla-scroll-body {
+    overflow-x: auto !important;
+    width: 100% !important;
+  }
+
+  /* EVITAR que la tabla exceda el viewport */
+  .tabla-scroll-body .MuiDataGrid-root {
+    min-width: 100% !important;
+    width: 100% !important;
+  }
+}
+
+/* Por defecto (escritorio) */
+.solo-mobile {
+  display: none;
+}
+
+/* Mobile */
+@media (max-width: 768px) {
+  .solo-escritorio {
+    display: none;
+  }
+  .solo-mobile {
+    display: inline;
   }
 }

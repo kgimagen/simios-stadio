@@ -1,7 +1,8 @@
 // =========================================
-// COMPONENTE PLANTILLA PARA TABLAS
+// COMPONENTE PLANTILLA PARA TABLAS (Mejorado con modes + scroll fix)
 // =========================================
 
+import { useRef, useEffect } from "react";
 import { DataGrid } from "@mui/x-data-grid";
 import IconButton from "@mui/material/IconButton";
 import ArrowBackIosNewIcon from "@mui/icons-material/ArrowBackIosNew";
@@ -18,70 +19,113 @@ function TablaTemplate({
   prevDisabled = false,
   nextDisabled = false,
   loading = false,
+  mode = "full",    // <-- NUEVO (full, header, body)
 }) {
   const hideArrows = prevDisabled && nextDisabled;
 
-  return (
-    <div style={{ display: "inline-block" }}>
+  // ============================================================
+  // FIX: Permitir que el scroll siga hacia abajo cuando termina
+  // ============================================================
+  const gridRef = useRef(null);
 
-      {/* TÍTULO CON FLECHAS (si corresponde) */}
-      <div
-        style={{
-          background: "#191e25",
-          color: "#ffffff",
-          fontFamily: "Bebas Neue",
-          fontSize: "35px",
-          textAlign: "center",
-          textTransform: "uppercase",
-          padding: "5px 0",
-          marginBottom: "8px",
-          borderRadius: "8px",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          gap: 12,
-        }}
-      >
+  useEffect(() => {
+    const virtualScroller =
+      gridRef.current?.querySelector(".MuiDataGrid-virtualScroller");
 
-        {/* Flecha izquierda — solo cuando corresponde */}
-        {!hideArrows && (
-          <IconButton
-            onClick={onPrev}
-            disabled={prevDisabled}
-            sx={{ padding: 0 }}
-          >
-            <ArrowBackIosNewIcon
-              sx={{
-                fontSize: 25,
-                color: prevDisabled ? "#0b4a81" : "#4da3ff",
-              }}
-            />
-          </IconButton>
-        )}
+    if (!virtualScroller) return;
 
-        {/* Título */}
-        <span>{title}</span>
+    const handleWheel = (e) => {
+      const atTop = virtualScroller.scrollTop === 0;
+      const atBottom =
+        virtualScroller.scrollHeight - virtualScroller.clientHeight ===
+        virtualScroller.scrollTop;
 
-        {/* Flecha derecha — solo cuando corresponde */}
-        {!hideArrows && (
-          <IconButton
-            onClick={onNext}
-            disabled={nextDisabled}
-            sx={{ padding: 0 }}
-          >
-            <ArrowForwardIosIcon
-              sx={{
-                fontSize: 25,
-                color: nextDisabled ? "#0b4a81" : "#4da3ff",
-              }}
-            />
-          </IconButton>
-        )}
+      // Permitir pasar scroll al body
+      if ((atTop && e.deltaY < 0) || (atBottom && e.deltaY > 0)) {
+        e.preventDefault();
+        window.scrollBy({
+          top: e.deltaY,
+          behavior: "auto",
+        });
+      }
+    };
 
+    virtualScroller.addEventListener("wheel", handleWheel, {
+      passive: false,
+    });
+
+    return () => {
+      virtualScroller.removeEventListener("wheel", handleWheel);
+    };
+  }, []);
+
+  // ===========================
+  // 1) MODO HEADER ÚNICAMENTE
+  // ===========================
+  if (mode === "header") {
+    return (
+      <div style={{ width: "100%" }}>
+        <div
+          className="tabla-header-fixed"
+          style={{
+            background: "#191e25",
+            color: "#ffffff",
+            fontFamily: "Bebas Neue",
+            fontSize: "35px",
+            textAlign: "center",
+            textTransform: "uppercase",
+            padding: "5px 0",
+            marginBottom: "8px",
+            borderRadius: "8px",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: 12,
+          }}
+        >
+          {!hideArrows && (
+            <IconButton
+              onClick={onPrev}
+              disabled={prevDisabled}
+              sx={{ padding: 0 }}
+            >
+              <ArrowBackIosNewIcon
+                sx={{
+                  fontSize: 25,
+                  color: prevDisabled ? "#0b4a81" : "#4da3ff",
+                }}
+              />
+            </IconButton>
+          )}
+
+          <span>{title}</span>
+
+          {!hideArrows && (
+            <IconButton
+              onClick={onNext}
+              disabled={nextDisabled}
+              sx={{ padding: 0 }}
+            >
+              <ArrowForwardIosIcon
+                sx={{
+                  fontSize: 25,
+                  color: nextDisabled ? "#0b4a81" : "#4da3ff",
+                }}
+              />
+            </IconButton>
+          )}
+        </div>
       </div>
+    );
+  }
 
-      {/* CONTENEDOR DE TABLA O LOADING */}
+  // ===========================
+  // 2) MODO CUERPO ÚNICAMENTE
+  // ===========================
+  if (mode === "body") {
+    return (
       <div
+        className="tabla-scroll-body"
         style={{
           height,
           borderRadius: "12px",
@@ -90,7 +134,6 @@ function TablaTemplate({
           position: "relative",
         }}
       >
-
         {loading && (
           <div
             style={{
@@ -115,6 +158,7 @@ function TablaTemplate({
         )}
 
         <DataGrid
+          ref={gridRef}
           rows={rows}
           columns={columns}
           disableRowSelectionOnClick
@@ -129,6 +173,7 @@ function TablaTemplate({
           getRowClassName={getRowClassName}
           columnBuffer={4}
           disableExtendRowFullWidth={true}
+          disableColumnResize
           sx={{
             fontSize: "14px",
             color: "#fff",
@@ -151,7 +196,6 @@ function TablaTemplate({
               borderColor: "#191e25",
             },
 
-
             "& .MuiDataGrid-row": {
               borderBottom: "1px solid #191e25",
             },
@@ -162,42 +206,50 @@ function TablaTemplate({
               fontWeight: 600,
             },
 
-            "& .MuiDataGrid-cell[data-field='matchday']": {
-              backgroundColor: "#0b5394 !important",
-            },
-
-            "& .MuiDataGrid-cell[data-field='capRed']": {
-              backgroundColor: "#5b0f00 !important",
-            },
-
-            "& .MuiDataGrid-cell[data-field='capBlue']": {
-              backgroundColor: "#073763 !important",
-            },
-
-            "& .MuiDataGrid-cell[data-field='score']": {
-              backgroundColor: "#0b5394 !important",
-            },
-
             "& .row-red-win .MuiDataGrid-cell": {
-              backgroundColor: "#0b5394 !important",   // rojo victoria
+              backgroundColor: "#0b5394 !important",
               color: "#fff !important",
             },
 
             "& .row-blue-win .MuiDataGrid-cell": {
-              backgroundColor: "#0b5394 !important",   // azul victoria
+              backgroundColor: "#0b5394 !important",
               color: "#fff !important",
             },
 
             "& .row-draw .MuiDataGrid-cell": {
-              backgroundColor: "#0b5394 !important",   // el gris que usás en Resultados
+              backgroundColor: "#0b5394 !important",
               color: "#fff !important",
             },
-
           }}
         />
-
       </div>
+    );
+  }
 
+  // ===========================
+  // 3) MODO FULL (ESCRITORIO)
+  // ===========================
+  return (
+    <div style={{ display: "inline-block" }}>
+      {/* Header */}
+      <TablaTemplate
+        title={title}
+        onPrev={onPrev}
+        onNext={onNext}
+        prevDisabled={prevDisabled}
+        nextDisabled={nextDisabled}
+        mode="header"
+      />
+
+      {/* Body */}
+      <TablaTemplate
+        rows={rows}
+        columns={columns}
+        height={height}
+        loading={loading}
+        getRowClassName={getRowClassName}
+        mode="body"
+      />
     </div>
   );
 }

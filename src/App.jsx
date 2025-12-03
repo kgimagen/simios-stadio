@@ -7,6 +7,7 @@ import Descensos from "./pages/Descensos.jsx";
 import Historial from "./pages/Historial.jsx";
 import AdminLogin from "./pages/AdminLogin.jsx";
 import AdminMatch from "./pages/AdminMatch.jsx";
+import HistorialTorneos from "./pages/HistorialTorneos.jsx";
 
 
 function PrivateRoute({ children }) {
@@ -22,7 +23,8 @@ function App() {
         <Route path="/" element={<Clausura />} />
         <Route path="/descensos" element={<Descensos />} />
         <Route path="/historial" element={<Historial />} />
-
+        <Route path="/torneos" element={<HistorialTorneos />} />
+        
         {/* Login */}
         <Route path="/admin" element={<AdminLogin />} />
 

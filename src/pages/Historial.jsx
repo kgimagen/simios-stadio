@@ -75,18 +75,47 @@ function Historial() {
   const currentMatch = matches[currentIndex];
 
   return (
-    <Box sx={{ maxWidth: 900, mx: "auto", mt: 3, color: "#e2e2e2" }}>
+    <Box 
+      sx={{ 
+        width: "100%", 
+        maxWidth: "100%", 
+        px: { xs: 2, sm: 0 },  // aire lateral en mobile
+        mt: 3, 
+        color: "#e2e2e2",
+        boxSizing: "border-box"
+      }}
+    >
+
+      {/* ========== IMAGEN SUPERIOR (idéntica a Clausura25) ========== */}
+      <div
+        style={{
+          width: "100%",
+          display: "flex",
+          justifyContent: "center",
+          marginTop: 10,
+          marginBottom: 10,
+        }}
+      >
+        <img
+          src="https://i.ibb.co/8Dx2X5Gf/somos-balon-pie-png.webp"
+          alt="Somos Balonpie 2025"
+          style={{ width: "200px", height: "auto" }}
+        />
+      </div>
+
+      {/* ================== TÍTULO ================== */}
       <h2
         style={{
           background: "#191e25",
           color: "#ffffff",
           fontFamily: "Bebas Neue",
-          fontSize: "25px",
+          fontSize: "32px",
           textAlign: "center",
           textTransform: "uppercase",
           padding: "5px 0",
           marginBottom: "15px",
           borderRadius: "8px",
+          letterSpacing: "1px",
         }}
       >
         Historial de Partidos
@@ -97,7 +126,7 @@ function Historial() {
         <Typography>No hay partidos registrados aún.</Typography>
       ) : (
         <>
-          {/* Navigation */}
+          {/* NAVEGACIÓN */}
           <Stack
             direction="row"
             justifyContent="center"
@@ -105,7 +134,6 @@ function Historial() {
             spacing={2}
             sx={{ mb: 2 }}
           >
-            {/* Flecha izquierda */}
             <IconButton
               onClick={goPrev}
               disabled={currentIndex === matches.length - 1}
@@ -124,7 +152,6 @@ function Historial() {
               Fecha {currentMatch.matchday}
             </Typography>
 
-            {/* Flecha derecha */}
             <IconButton
               onClick={goNext}
               disabled={currentIndex === 0}
@@ -140,8 +167,7 @@ function Historial() {
             </IconButton>
           </Stack>
 
-
-          {/* CARD */}
+          {/* CARD PRINCIPAL */}
           <Paper
             sx={{
               p: 2,
@@ -149,12 +175,21 @@ function Historial() {
               backgroundColor: "#111418",
               borderLeft: "4px solid #ff6b6b",
               borderRight: "4px solid #4da3ff",
-              maxWidth: 600,          // ← Agregá esto
-              mx: "auto",             // ← Centrado real
+              maxWidth: 600,      // ANCHO MÁXIMO CONTROLADO
+              width: "100%",
+              mx: "auto",         // CENTRADO TOTAL
+              boxSizing: "border-box",
             }}
           >
-            {/* Resultado */}
-            <Typography sx={{ mb: 2, fontSize: 16, textAlign: "center" }}>
+            {/* RESULTADO */}
+            <Typography 
+              sx={{ 
+                mb: 2, 
+                fontSize: 18, 
+                textAlign: "center", 
+                fontWeight: 600 
+              }}
+            >
               <strong style={{ color: "#ff6b6b" }}>Rojo</strong>: {currentMatch.red.goals}
               {"  "} | {"  "}
               <strong style={{ color: "#4da3ff" }}>Azul</strong>: {currentMatch.blue.goals}
@@ -162,14 +197,15 @@ function Historial() {
 
             <Divider sx={{ my: 1 }} />
 
-            <Stack
-              direction={{ xs: "column", sm: "row" }}
-              spacing={2}
+            {/* EQUIPOS LADO A LADO EN TODAS LAS RESOLUCIONES */}
+            <Stack 
+              direction="row" 
+              spacing={2} 
               sx={{ mt: 1, mb: 1 }}
             >
               {/* ROJO */}
               <Box sx={{ flex: 1 }}>
-                <Typography sx={{ fontWeight: 600, mb: 0.5, color: "#ff6b6b" }}>
+                <Typography sx={{ fontWeight: 600, mb: 0.5, color: "#ff6b6b", textAlign: "center" }}>
                   Equipo Rojo
                 </Typography>
 
@@ -177,7 +213,6 @@ function Historial() {
                   {currentMatch.red.players?.map((id, i) => {
                     let name = playersMap[id] || id;
 
-                    // Si es invitado (id no existe en playersMap), capitalizar visualmente
                     if (!playersMap[id]) {
                       name = name.charAt(0).toUpperCase() + name.slice(1);
                     }
@@ -207,15 +242,12 @@ function Historial() {
                       </div>
                     );
                   })}
-
                 </Stack>
-
-
               </Box>
 
               {/* AZUL */}
               <Box sx={{ flex: 1 }}>
-                <Typography sx={{ fontWeight: 600, mb: 0.5, color: "#4da3ff" }}>
+                <Typography sx={{ fontWeight: 600, mb: 0.5, color: "#4da3ff", textAlign: "center" }}>
                   Equipo Azul
                 </Typography>
 
@@ -226,6 +258,7 @@ function Historial() {
                     if (!playersMap[id]) {
                       name = name.charAt(0).toUpperCase() + name.slice(1);
                     }
+
                     const isCap = isCaptain(currentMatch.blue, id, playersMap);
                     const photo = `/players/${id}.jpg`;
 
@@ -251,21 +284,18 @@ function Historial() {
                       </div>
                     );
                   })}
-
                 </Stack>
-
-
               </Box>
             </Stack>
 
-
-            {/* Tarjetas */}
+            {/* TARJETAS */}
             {currentMatch.cards?.length > 0 && (
               <>
                 <Divider sx={{ my: 1 }} />
                 <Typography sx={{ fontWeight: 600, mb: 0.5 }}>
                   Tarjetas:
                 </Typography>
+
                 <Stack direction="column" spacing={0.5}>
                   {currentMatch.cards.map((c, index) => (
                     <Chip
@@ -291,6 +321,7 @@ function Historial() {
       )}
     </Box>
   );
+
 }
 
 export default Historial;

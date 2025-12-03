@@ -973,8 +973,6 @@ function Clausura25() {
     setViewMatchday(shownMatchday + 1);
   };
 
-
-
   return (
     <div className="cl25-root" style={{ scale: "0.85", transformOrigin: "top center" }}>
 
@@ -984,8 +982,8 @@ function Clausura25() {
           width: "100%",
           display: "flex",
           justifyContent: "center",
-          marginTop: 10,  
-          marginBottom: 10,   
+          marginTop: 10,
+          marginBottom: 10,
         }}
       >
         <img
@@ -995,67 +993,163 @@ function Clausura25() {
         />
       </div>
 
-
       {/* CONTENEDOR DE LAS 3 TABLAS */}
       <div
         className="cl25-container"
         style={{
           display: "flex",
+          flexDirection: "row",
           justifyContent: "center",
-          alignItems: "center",
+          alignItems: "flex-start",
           gap: "50px",
           width: "100%",
           marginTop: 20,
         }}
       >
 
+        {/* ============= TABLA POSICIONES ============= */}
+        <div className="table-wrapper">
 
-        {/* TABLA POSICIONES */}
-        <TablaTemplate
-          title={`TABLA DE POSICIONES / FECHA ${shownMatchday} DE ${CL25_MAX_FECHAS}`}
-          rows={rows}
-          columns={columns}
-          height={650}
-          getRowClassName={(params) => params.row.isLast4pos ? "last4-row" : ""}
-          onPrev={goPrev}
-          onNext={goNext}
-          prevDisabled={shownMatchday === 1}
-          nextDisabled={shownMatchday === cl25Total}
-          loading={loading}
-        />
+          {/* HEADER FIJO */}
+          <TablaTemplate
+            title={
+              <span className="titulo-tabla">
+                TABLA DE POSICIONES 
+                <span className="solo-escritorio"> / FECHA {shownMatchday} DE {CL25_MAX_FECHAS}</span>
+                <span className="solo-mobile"><br />FECHA {shownMatchday} DE {CL25_MAX_FECHAS}</span>
+              </span>
+            }
 
-        <TablaTemplate
-          title="TABLA DE PROMEDIOS"
-          rows={promRows}
-          columns={promColumns}
-          height={650}
-          prevDisabled={true}
-          nextDisabled={true}
-          loading={loading}
-          getRowClassName={(params) => params.row.isLast4 ? "last4-row" : ""}
-        />
+            onPrev={goPrev}
+            onNext={goNext}
+            prevDisabled={shownMatchday === 1}
+            nextDisabled={shownMatchday === cl25Total}
+            mode="header"
+          />
 
-        <TablaTemplate
-          title="RESULTADOS DE CAPITANES"
-          rows={resultRows}
-          columns={resultColumns}
-          height={650}
-          prevDisabled={true}
-          nextDisabled={true}
-          loading={loading}
-          getRowClassName={(params) => {
-            const [r, b] = (params.row.score || "0 - 0").split("-").map(n => parseInt(n.trim(), 10));
 
-            if (r > b) return "row-red-win";
-            if (b > r) return "row-blue-win";
-            return "row-draw"; // empate
-          }}
-        />
+          {/* TABLA SCROLLEABLE */}
+          <TablaTemplate
+            rows={rows}
+            columns={columns}
+            height={650}
+            loading={loading}
+            getRowClassName={(params) => params.row.isLast4pos ? "last4-row" : ""}
+            mode="body"
+          />
+        </div>
+
+        {/* ============= TABLA PROMEDIOS ============= */}
+        <div className="table-wrapper">
+
+          <TablaTemplate
+            title="PROMEDIOS CLAUSURA 25"
+            mode="header"
+            prevDisabled={true}
+            nextDisabled={true}
+          />
+
+          <TablaTemplate
+            rows={promRows}
+            columns={promColumns}
+            height={650}
+            loading={loading}
+            getRowClassName={(params) => params.row.isLast4 ? "last4-row" : ""}
+            mode="body"
+          />
+
+        </div>
+
+        {/* ============= TABLA RESULTADOS DE CAPITANES ============= */}
+        <div className="table-wrapper">
+
+          <TablaTemplate
+            title="RESULTADOS DE CAPITANES"
+            mode="header"
+            prevDisabled={true}
+            nextDisabled={true}
+          />
+
+          <TablaTemplate
+            rows={resultRows}
+            columns={resultColumns}
+            height={650}
+            loading={loading}
+            getRowClassName={(params) => {
+              const [r, b] = (params.row.score || "0 - 0")
+                .split("-")
+                .map(n => parseInt(n.trim(), 10));
+
+              if (r > b) return "row-red-win";
+              if (b > r) return "row-blue-win";
+              return "row-draw";
+            }}
+            mode="body"
+          />
+
+        </div>
+
       </div>
 
+      {/* ================== ESTILOS RESPONSIVE ================== */}
+      <style>
+      {`
+        @media (max-width: 768px) {
 
-    </div>  
-  );        
+          /* fuerza 100% ancho real */
+          div.cl25-root {
+            transform: scale(1) !important;
+            scale: 1 !important;
+            width: 100% !important;
+            padding: 0 !important;
+            margin: 0 !important;
+          }
+
+          .cl25-container {
+            flex-direction: column !important;
+            align-items: center !important;
+            gap: 30px !important;
+            width: 100% !important;
+          }
+
+          /* wrapper de cada tabla */
+          .table-wrapper {
+            width: 100% !important;
+            max-width: 100% !important;
+            padding-left: 16px !important;
+            padding-right: 16px !important;
+          }
+
+          /* header fijo */
+          .tabla-header-fixed {
+            width: 100% !important;
+            position: sticky !important;
+            top: 0 !important;
+            z-index: 20 !important;
+            background: #1a1f27 !important;
+            padding-left: 10px !important;
+            padding-right: 10px !important;
+          }
+
+          /* cuerpo con scroll */
+          .tabla-scroll-body {
+            overflow-x: auto !important;
+          }
+        }
+
+        /* escritorio */
+        .table-wrapper {
+          overflow-x: visible;
+          width: auto;
+          padding: 0;
+        }
+      `}
+      </style>
+
+    </div>
+  );
+
+
 }
 
 
