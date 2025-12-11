@@ -220,6 +220,13 @@ function TablaTemplate({
               backgroundColor: "#0b5394 !important",
               color: "#fff !important",
             },
+
+            /* ⭐ NUEVA REGLA PARA DESCENDED */
+            "& .row-descended .MuiDataGrid-cell": {
+              backgroundColor: "#073763 !important",
+              color: "#fff !important",
+              fontWeight: 600,
+            },
           }}
         />
       </div>

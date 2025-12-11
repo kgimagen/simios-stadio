@@ -6,7 +6,7 @@ const firebaseConfig = {
   apiKey: "AIzaSyDDQvgnlghzELVhMVCzBsmP6fsAdDQYsDU",
   authDomain: "simios-stadio.firebaseapp.com",
   projectId: "simios-stadio",
-  storageBucket: "simios-stadio.appspot.com", // <--- corregido
+  storageBucket: "simios-stadio.appspot.com",
   messagingSenderId: "216670567002",
   appId: "1:216670567002:web:bead568ccd6252a6bef663"
 };
@@ -15,3 +15,6 @@ const app = initializeApp(firebaseConfig);
 
 export const auth = getAuth(app);
 export const db = getFirestore(app);
+
+// ESTA LÍNEA ES LA QUE FALTABA
+export { app };

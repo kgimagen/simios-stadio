@@ -9,6 +9,7 @@ import AdminLogin from "./pages/AdminLogin.jsx";
 import AdminMatch from "./pages/AdminMatch.jsx";
 import HistorialTorneos from "./pages/HistorialTorneos.jsx";
 
+import MoverPromedio from "./pages/MoverPromedio.jsx"; // <--- IMPORT NECESARIO
 
 function PrivateRoute({ children }) {
   const { user } = useAuth();
@@ -24,14 +25,14 @@ function App() {
         <Route path="/descensos" element={<Descensos />} />
         <Route path="/historial" element={<Historial />} />
         <Route path="/torneos" element={<HistorialTorneos />} />
-        
-        {/* Login */}
+
+        <Route path="/mover-promedio" element={<PrivateRoute><MoverPromedio /></PrivateRoute>} />
+
+
         <Route path="/admin" element={<AdminLogin />} />
 
-        {/* Único panel oficial */}
         <Route path="/admin/match" element={<PrivateRoute><AdminMatch /></PrivateRoute>} />
 
-        {/* Si intentan ir a /admin/panel los redirijo */}
         <Route path="/admin/panel" element={<Navigate to="/admin/match" />} />
       </Routes>
     </div>

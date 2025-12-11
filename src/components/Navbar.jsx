@@ -128,6 +128,7 @@ function Navbar() {
       <div style={mobileMenu} className="menu-mobile">
         <Link to="/" style={linkButton}>Tabla de Posiciones / Clausura 25</Link>
         <Link to="/historial" style={linkButton}>Historial de Partidos</Link>
+        <Link to="/torneos" style={linkButton}>Historial de Torneos</Link>
         {user && <Link to="/admin/match" style={linkButton}>Cargar Fecha</Link>}
       </div>
 
