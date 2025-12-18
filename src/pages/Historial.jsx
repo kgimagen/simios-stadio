@@ -51,7 +51,7 @@ function Historial() {
   // Load matches ordered by newest
   useEffect(() => {
     const q = query(
-      collection(db, "tournaments", "clausura25", "matches"),
+      collection(db, "tournaments", "verano25", "matches"),
       orderBy("matchday", "desc")
     );
 

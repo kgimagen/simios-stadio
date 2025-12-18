@@ -2,7 +2,7 @@ import { Routes, Route, Navigate } from "react-router-dom";
 import Navbar from "./components/Navbar.jsx";
 import { useAuth } from "./context/AuthContext";
 
-import Clausura from "./pages/Clausura25.jsx";
+import TorneoActual from "./pages/TorneoActual.jsx";
 import Descensos from "./pages/Descensos.jsx";
 import Historial from "./pages/Historial.jsx";
 import AdminLogin from "./pages/AdminLogin.jsx";
@@ -21,7 +21,7 @@ function App() {
     <div style={{ background: "#242e3a", minHeight: "100vh" }}>
       <Navbar />
       <Routes>
-        <Route path="/" element={<Clausura />} />
+        <Route path="/" element={<TorneoActual />} />
         <Route path="/descensos" element={<Descensos />} />
         <Route path="/historial" element={<Historial />} />
         <Route path="/torneos" element={<HistorialTorneos />} />

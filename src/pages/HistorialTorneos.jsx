@@ -10,6 +10,7 @@ import { db } from "../firebase";
 import { collection, getDocs } from "firebase/firestore";
 
 const TORNEOS = [
+  "clausura25",
   "apertura25",
   "verano24",
   "clausura24",
@@ -33,6 +34,19 @@ function HistorialTorneos() {
   const [loading, setLoading] = useState(false);
 
   const torneoActual = TORNEOS[index];
+
+  // ============================
+  // CLASIFICACIÓN DE DESCENSOS
+  // ============================
+  const descendidos = promRows.filter(p => p.descended);
+
+  const descensoPromedios = descendidos
+    .slice(-4)
+    .map(p => p.name);
+
+  const descensoPosiciones = descendidos
+    .slice(0, Math.max(descendidos.length - 4, 0))
+    .map(p => p.name);
 
   // ============================
   // COL. TABLA POSICIONES
@@ -64,7 +78,10 @@ function HistorialTorneos() {
               }}
               onError={(e) => (e.target.src = "/players/default.jpg")}
             />
-            <span>{params.row.name}</span>
+            <span>
+              {params.row.name}
+              {descensoPosiciones.includes(params.row.name) ? " 📉" : ""}
+            </span>
           </div>
         );
       },
@@ -113,13 +130,12 @@ function HistorialTorneos() {
             />
             <span>
               {params.row.name}
-              {params.row.descended ? " 📉" : ""}
+              {descensoPromedios.includes(params.row.name) ? " 📉" : ""}
             </span>
           </div>
         );
       },
     },
-
     { field: "prom", headerName: "Prom", width: 80, align: "center" },
   ];
 
@@ -225,7 +241,7 @@ function HistorialTorneos() {
           maxWidth: "100%",
         }}
       >
-        {/* Tabla izquierda: TORNEO (header + body) */}
+        {/* Tabla izquierda: POSICIONES */}
         <div
           style={{
             flex: "1 1 0",
@@ -241,6 +257,11 @@ function HistorialTorneos() {
             height={550}
             loading={loading}
             mode="full"
+            getRowClassName={(params) =>
+              descensoPosiciones.includes(params.row.name)
+                ? "row-descended"
+                : ""
+            }
             onPrev={prev}
             onNext={next}
             prevDisabled={index === TORNEOS.length - 1}
@@ -248,7 +269,7 @@ function HistorialTorneos() {
           />
         </div>
 
-        {/* Tabla derecha: PROMEDIOS (header + body) */}
+        {/* Tabla derecha: PROMEDIOS */}
         <div
           style={{
             flex: "1 1 0",
@@ -265,7 +286,9 @@ function HistorialTorneos() {
             loading={loading}
             mode="full"
             getRowClassName={(params) =>
-              params.row.descended ? "row-descended" : ""
+              descensoPromedios.includes(params.row.name)
+                ? "row-descended"
+                : ""
             }
             prevDisabled
             nextDisabled

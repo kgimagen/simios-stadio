@@ -86,7 +86,7 @@ function Navbar() {
           onMouseOver={(e) => Object.assign(e.target.style, linkButtonHover)}
           onMouseOut={(e) => Object.assign(e.target.style, linkButton)}
         >
-          Tabla de Posiciones / Clausura 25
+          Tabla de Posiciones
         </Link>
 
         <Link

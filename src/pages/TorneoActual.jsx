@@ -9,9 +9,12 @@ import {
 } from "firebase/firestore";
 import TablaTemplate from "./TablaTemplate";
 
-const CL25_MAX_FECHAS = 18;
 
-function Clausura25() {
+const TORNEO_ACTUAL = "verano25";
+const TOTAL_FECHAS = 10;
+
+
+function TorneoActual() {
   const [rows, setRows] = useState([]);
   const [promRows, setPromRows] = useState([]);
   const [cl25Total, setCl25Total] = useState(0);
@@ -30,7 +33,7 @@ function Clausura25() {
   // Cargar partidos + jugadores desde Firestore
   useEffect(() => {
     const unsub = onSnapshot(
-      collection(db, "tournaments", "clausura25", "matches"),
+      collection(db, "tournaments", TORNEO_ACTUAL, "matches"),
       async (snapshot) => {
         const matches = snapshot.docs.map((docSnap) => ({
           id: docSnap.id,
@@ -371,18 +374,10 @@ function Clausura25() {
 
       resultsMapped.reverse();
       // ========================================================
-      // TABLA DE PROMEDIOS (TV24 + AP25 + CL25 hasta fecha vista)
+      // TABLA DE PROMEDIOS (AP25 + CL25 + TV25 hasta fecha vista)
       // ========================================================
 
-      // Verano 24
-      const veranoDoc = await getDoc(
-        doc(db, "tournaments", "verano24_summary")
-      );
-      const tv24_total = veranoDoc.exists()
-        ? Number(veranoDoc.data().totalMatchdays || 0)
-        : 0;
-
-      // Apertura 25
+      // Apertura 25 (summary)
       const aperturaDoc = await getDoc(
         doc(db, "tournaments", "apertura25_summary")
       );
@@ -390,64 +385,67 @@ function Clausura25() {
         ? Number(aperturaDoc.data().totalMatchdays || 0)
         : 0;
 
-      // Puntos Verano 24
-      const veranoSnap = await getDocs(
-        collection(db, "tournaments", "verano24_summary", "players")
+      // Clausura 25 (summary)
+      const clausuraDoc = await getDoc(
+        doc(db, "tournaments", "clausura25_summary")
       );
+      const cl25_total = clausuraDoc.exists()
+        ? Number(clausuraDoc.data().totalMatchdays || 0)
+        : 0;
 
-      const veranoStats = {};
-      const veranoPlayers = new Set();
+      // Torneo actual TV25 (verano25)
+      const tv25Doc = await getDoc(
+        doc(db, "tournaments", TORNEO_ACTUAL)
+      );
+      const tv25_total = tv25Doc.exists()
+        ? Number(tv25Doc.data().totalMatchdays || 0)
+        : 0;
 
-      veranoSnap.docs.forEach((d) => {
-        const x = d.data();
-        veranoStats[x.name] = x.pts;
-        veranoPlayers.add(x.name);
-      });
-
-      // Puntos Apertura 25
+      // Puntos AP25 (summary/players)
       const aperturaSnap = await getDocs(
         collection(db, "tournaments", "apertura25_summary", "players")
       );
-
       const aperturaStats = {};
-      const aperturaPlayers = new Set();
-
       aperturaSnap.docs.forEach((d) => {
         const x = d.data();
-        aperturaStats[x.name] = x.pts;
-        aperturaPlayers.add(x.name);
+        aperturaStats[x.name] = Number(x.pts || 0);
+      });
+
+      // Puntos CL25 (summary/players)
+      const clausuraSnap = await getDocs(
+        collection(db, "tournaments", "clausura25_summary", "players")
+      );
+      const clausuraStats = {};
+      clausuraSnap.docs.forEach((d) => {
+        const x = d.data();
+        clausuraStats[x.name] = Number(x.pts || 0);
       });
 
       // TABLA DE PROMEDIOS (actual)
       const promList = merged.map((p) => {
         const name = p.name;
 
-        const tv24_pts = veranoStats[name] || 0;
         const ap25_pts = aperturaStats[name] || 0;
-        const cl25_pts = p.points;
+        const cl25_pts = clausuraStats[name] || 0;
+        const tv25_pts = p.points; // puntos del torneo actual (hasta fecha vista)
 
-        const jugoCl25 = p.wins + p.draws + p.losses > 0;
-        const cl25_pj = jugoCl25 ? currentMatchday : 0;
+        const pj = ap25_total + cl25_total + currentMatchday;
 
-        const pj =
-          (veranoPlayers.has(name) ? tv24_total : 0) +
-          (aperturaPlayers.has(name) ? ap25_total : 0) +
-          cl25_pj;
 
-        const totalPts = tv24_pts + ap25_pts + cl25_pts;
-
+        const totalPts = ap25_pts + cl25_pts + tv25_pts;
         const prom = pj > 0 ? Number((totalPts / pj).toFixed(3)) : 0;
 
         return {
           id: p.id,
           name,
-          tv24_pts,
           ap25_pts,
           cl25_pts,
+          tv25_pts,
           pj,
           prom,
         };
       });
+
 
       // ================================
       // POSICIÓN ANTERIOR EN PROMEDIOS
@@ -536,23 +534,19 @@ function Clausura25() {
         const prevPromList = prevMergedProm.map((p) => {
           const name = p.name;
 
-          const tv24_pts = veranoStats[name] || 0;
           const ap25_pts = aperturaStats[name] || 0;
-          const cl25_pts = p.points;
+          const cl25_pts = clausuraStats[name] || 0;
+          const tv25_pts = p.points; // puntos del torneo actual hasta (currentMatchday - 1)
 
-          const jugoCl25 = p.wins + p.draws + p.losses > 0;
-          const cl25_pj = jugoCl25 ? currentMatchday - 1 : 0;
+          const pj = ap25_total + cl25_total + (currentMatchday - 1);
 
-          const pj =
-            (veranoPlayers.has(name) ? tv24_total : 0) +
-            (aperturaPlayers.has(name) ? ap25_total : 0) +
-            cl25_pj;
 
-          const totalPts = tv24_pts + ap25_pts + cl25_pts;
+          const totalPts = ap25_pts + cl25_pts + tv25_pts;
           const prom = pj > 0 ? Number((totalPts / pj).toFixed(3)) : 0;
 
           return { name, prom };
         });
+
 
         prevPromList.sort((a, b) => b.prom - a.prom);
 
@@ -839,9 +833,9 @@ function Clausura25() {
       },
     },
 
-    { field: "tv24_pts", headerName: "TV24", width: 40, align: "center" },
     { field: "ap25_pts", headerName: "AP25", width: 40, align: "center" },
     { field: "cl25_pts", headerName: "CL25", width: 40, align: "center" },
+    { field: "tv25_pts", headerName: "TV25", width: 40, align: "center" },
     { field: "pj", headerName: "PJ", width: 40, align: "center" },
     { field: "prom", headerName: "PROM", width: 70, align: "center" },
   ];
@@ -1015,8 +1009,8 @@ function Clausura25() {
             title={
               <span className="titulo-tabla">
                 TABLA DE POSICIONES 
-                <span className="solo-escritorio"> / FECHA {shownMatchday} DE {CL25_MAX_FECHAS}</span>
-                <span className="solo-mobile"><br />FECHA {shownMatchday} DE {CL25_MAX_FECHAS}</span>
+                <span className="solo-escritorio"> / FECHA {shownMatchday} DE {TOTAL_FECHAS}</span>
+                <span className="solo-mobile"><br />FECHA {shownMatchday} DE {TOTAL_FECHAS}</span>
               </span>
             }
 
@@ -1043,7 +1037,7 @@ function Clausura25() {
         <div className="table-wrapper">
 
           <TablaTemplate
-            title="PROMEDIOS CLAUSURA 25"
+            title="PROMEDIOS VERANO 25/26"
             mode="header"
             prevDisabled={true}
             nextDisabled={true}
@@ -1153,4 +1147,4 @@ function Clausura25() {
 }
 
 
-export default Clausura25;
+export default TorneoActual;

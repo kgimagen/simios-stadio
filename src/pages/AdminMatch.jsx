@@ -18,13 +18,14 @@ import { db } from "../firebase";
 import {
   collection,
   getDocs,
-  addDoc,
   serverTimestamp,
   deleteDoc,
-  doc
+  doc,
+  setDoc
 } from "firebase/firestore";
 
 
+const TORNEO_ACTUAL = "verano25";
 // Máximo jugadores por equipo
 const MAX_PLAYERS_PER_TEAM = 10;
 
@@ -81,7 +82,10 @@ function AdminMatch() {
   // Cargar partidos existentes
   useEffect(() => {
     const loadMatches = async () => {
-      const snap = await getDocs(collection(db, "tournaments", "clausura25", "matches"));
+      const snap = await getDocs(
+        collection(db, "tournaments", TORNEO_ACTUAL, "matches")
+      );
+
       const list = snap.docs.map(d => ({ id: d.id, ...d.data() }));
       // Ordenar por fecha ascendente
       list.sort((a, b) => a.matchday - b.matchday);
@@ -226,10 +230,11 @@ function AdminMatch() {
 
 
     try {
-      await addDoc(
-        collection(db, "tournaments", "clausura25", "matches"),
+      await setDoc(
+        doc(db, "tournaments", TORNEO_ACTUAL, "matches", String(m)),
         matchDoc
       );
+
       setStatus("Partido cargado con éxito.");
 
       // Reset formulario
@@ -256,7 +261,7 @@ function AdminMatch() {
 
     try {
       await deleteDoc(
-        doc(db, "tournaments", "clausura25", "matches", matchToDelete.id)
+        doc(db, "tournaments", TORNEO_ACTUAL, "matches", matchToDelete.id)
       );
 
       setDeleteStatus(`Fecha ${matchToDelete.matchday} eliminada correctamente.`);
