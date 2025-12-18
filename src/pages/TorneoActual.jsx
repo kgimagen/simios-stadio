@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { db } from "../firebase";
+import { Link } from "react-router-dom";
 import {
   collection,
   onSnapshot,
@@ -429,7 +430,21 @@ function TorneoActual() {
         const cl25_pts = clausuraStats[name] || 0;
         const tv25_pts = p.points; // puntos del torneo actual (hasta fecha vista)
 
-        const pj = ap25_total + cl25_total + currentMatchday;
+        let pj = 0;
+
+        // AP25 → solo si tuvo puntos
+        if (ap25_pts > 0) {
+          pj += ap25_total;
+        }
+
+        // CL25 → solo si tuvo puntos
+        if (cl25_pts > 0) {
+          pj += cl25_total;
+        }
+
+        // TV25 → siempre suma
+        pj += currentMatchday;
+
 
 
         const totalPts = ap25_pts + cl25_pts + tv25_pts;
@@ -980,11 +995,35 @@ function TorneoActual() {
           marginBottom: 10,
         }}
       >
-        <img
-          src="https://i.ibb.co/8Dx2X5Gf/somos-balon-pie-png.webp"
-          alt="Somos Balonpie 2025"
-          style={{ width: "200px", height: "auto" }}
-        />
+        {/* LOGO */}
+        <div
+          style={{
+            width: "100%",
+            display: "flex",
+            justifyContent: "center",
+            marginBottom: 20,
+          }}
+        >
+          <Link
+            to="/"
+            style={{
+              display: "flex",
+              justifyContent: "center",
+            }}
+          >
+            <img
+              src="https://i.ibb.co/8DkLkqD5/somos-balon-pie-png-1.webp"
+              alt="Somos Balonpie y Morashop"
+              style={{
+                width: "400px",
+                maxWidth: "90%",
+                height: "auto",
+                cursor: "pointer",
+              }}
+            />
+          </Link>
+        </div>
+
       </div>
 
       {/* CONTENEDOR DE LAS 3 TABLAS */}

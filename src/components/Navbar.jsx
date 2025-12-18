@@ -126,11 +126,41 @@ function Navbar() {
 
       {/* Menú Mobile desplegable */}
       <div style={mobileMenu} className="menu-mobile">
-        <Link to="/" style={linkButton}>Tabla de Posiciones / Clausura 25</Link>
-        <Link to="/historial" style={linkButton}>Historial de Partidos</Link>
-        <Link to="/torneos" style={linkButton}>Historial de Torneos</Link>
-        {user && <Link to="/admin/match" style={linkButton}>Cargar Fecha</Link>}
+        <Link
+          to="/"
+          style={linkButton}
+          onClick={() => setOpen(false)}
+        >
+          Tabla de Posiciones
+        </Link>
+
+        <Link
+          to="/historial"
+          style={linkButton}
+          onClick={() => setOpen(false)}
+        >
+          Historial de Partidos
+        </Link>
+
+        <Link
+          to="/torneos"
+          style={linkButton}
+          onClick={() => setOpen(false)}
+        >
+          Historial de Torneos
+        </Link>
+
+        {user && (
+          <Link
+            to="/admin/match"
+            style={linkButton}
+            onClick={() => setOpen(false)}
+          >
+            Cargar Fecha
+          </Link>
+        )}
       </div>
+
 
       {/* Derecha */}
       <span

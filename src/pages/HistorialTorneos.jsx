@@ -5,7 +5,7 @@
 import { useEffect, useState } from "react";
 import getTournamentSummary from "../utils/getTournamentSummary";
 import TablaTemplate from "./TablaTemplate";
-
+import { Link } from "react-router-dom";
 import { db } from "../firebase";
 import { collection, getDocs } from "firebase/firestore";
 
@@ -18,7 +18,7 @@ const TORNEOS = [
   "clausura23",
   "apertura23",
   "verano23",
-  "clausura22"
+  "clausura22",
 ];
 
 function formatTitle(id) {
@@ -27,10 +27,19 @@ function formatTitle(id) {
   return `${name.charAt(0).toUpperCase() + name.slice(1)} ${year}`;
 }
 
+// ======================================================
+// Resolver playerId a partir del nombre (para fotos)
+// ======================================================
+function findPlayerIdByName(name, rows) {
+  const match = rows.find((p) => p.name === name);
+  return match ? match.playerId : "default";
+}
+
 function HistorialTorneos() {
   const [index, setIndex] = useState(0);
   const [rows, setRows] = useState([]);
   const [promRows, setPromRows] = useState([]);
+  const [resultRows, setResultRows] = useState([]);
   const [loading, setLoading] = useState(false);
 
   const torneoActual = TORNEOS[index];
@@ -38,18 +47,16 @@ function HistorialTorneos() {
   // ============================
   // CLASIFICACIÓN DE DESCENSOS
   // ============================
-  const descendidos = promRows.filter(p => p.descended);
+  const descendidos = promRows.filter((p) => p.descended);
 
-  const descensoPromedios = descendidos
-    .slice(-4)
-    .map(p => p.name);
+  const descensoPromedios = descendidos.slice(-4).map((p) => p.name);
 
   const descensoPosiciones = descendidos
     .slice(0, Math.max(descendidos.length - 4, 0))
-    .map(p => p.name);
+    .map((p) => p.name);
 
   // ============================
-  // COL. TABLA POSICIONES
+  // COLUMNAS TABLA POSICIONES
   // ============================
   const columns = [
     {
@@ -95,7 +102,7 @@ function HistorialTorneos() {
   ];
 
   // ============================
-  // COL. TABLA PROMEDIOS
+  // COLUMNAS TABLA PROMEDIOS
   // ============================
   const promColumns = [
     {
@@ -112,7 +119,6 @@ function HistorialTorneos() {
       renderCell: (params) => {
         const match = rows.find((p) => p.name === params.row.name);
         const playerId = match ? match.playerId : params.row.id;
-
         const url = `/players/${playerId}.jpg`;
 
         return (
@@ -140,7 +146,91 @@ function HistorialTorneos() {
   ];
 
   // ============================
-  // LEER PROMEDIOS FIRESTORE
+  // COLUMNAS RESULTADOS CAPITANES
+  // ============================
+  const resultColumns = [
+    {
+      field: "matchday",
+      headerName: "F",
+      width: 30,
+      align: "center",
+      sortable: false,
+      renderCell: (params) => `${params.row.matchday}.`,
+    },
+    {
+      field: "capRed",
+      headerName: "CAPITAN ROJO",
+      width: 170,
+      sortable: false,
+      renderCell: (params) => {
+        const playerId = findPlayerIdByName(params.row.capRed, rows);
+        const url = `/players/${playerId}.jpg`;
+        const lost = params.row.scoreRed < params.row.scoreBlue;
+
+        return (
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <img
+              src={url}
+              alt={params.row.capRed}
+              style={{
+                width: 45,
+                height: 32,
+                borderRadius: 4,
+                objectFit: "cover",
+                filter: lost ? "grayscale(100%)" : "none",
+                opacity: lost ? 0.5 : 1,
+              }}
+              onError={(e) => (e.target.src = "/players/default.jpg")}
+            />
+            <span style={{ opacity: lost ? 0.5 : 1 }}>
+              {params.row.capRed}
+            </span>
+          </div>
+        );
+      },
+    },
+    {
+      field: "capBlue",
+      headerName: "CAPITAN AZUL",
+      width: 170,
+      sortable: false,
+      renderCell: (params) => {
+        const playerId = findPlayerIdByName(params.row.capBlue, rows);
+        const url = `/players/${playerId}.jpg`;
+        const lost = params.row.scoreBlue < params.row.scoreRed;
+
+        return (
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <img
+              src={url}
+              alt={params.row.capBlue}
+              style={{
+                width: 45,
+                height: 32,
+                borderRadius: 4,
+                objectFit: "cover",
+                filter: lost ? "grayscale(100%)" : "none",
+                opacity: lost ? 0.5 : 1,
+              }}
+              onError={(e) => (e.target.src = "/players/default.jpg")}
+            />
+            <span style={{ opacity: lost ? 0.5 : 1 }}>
+              {params.row.capBlue}
+            </span>
+          </div>
+        );
+      },
+    },
+    {
+      field: "score",
+      headerName: "RESULTADO",
+      width: 100,
+      sortable: false,
+    },
+  ];
+
+  // ============================
+  // LEER PROMEDIOS
   // ============================
   async function loadPromedios(torneoId) {
     try {
@@ -168,7 +258,38 @@ function HistorialTorneos() {
   }
 
   // ============================
-  // CARGA POSICIONES + PROMEDIOS
+  // LEER RESULTADOS CAPITANES
+  // ============================
+  async function loadCapitanes(torneoId) {
+    try {
+      const snap = await getDocs(
+        collection(db, "tournaments", `${torneoId}_summary`, "capitanes")
+      );
+
+      const list = snap.docs
+        .map((d) => {
+          const x = d.data();
+          return {
+            id: d.id,
+            matchday: Number(x.matchday),
+            capRed: x.capRed,
+            capBlue: x.capBlue,
+            scoreRed: Number(x.scoreRed ?? 0),
+            scoreBlue: Number(x.scoreBlue ?? 0),
+            score: `${x.scoreRed ?? 0} - ${x.scoreBlue ?? 0}`,
+          };
+        })
+        .sort((a, b) => a.matchday - b.matchday);
+
+      setResultRows(list);
+    } catch (err) {
+      console.error("Error leyendo capitanes:", err);
+      setResultRows([]);
+    }
+  }
+
+  // ============================
+  // CARGA GENERAL
   // ============================
   useEffect(() => {
     async function load() {
@@ -178,6 +299,7 @@ function HistorialTorneos() {
       setRows(data);
 
       await loadPromedios(torneoActual);
+      await loadCapitanes(torneoActual);
 
       setLoading(false);
     }
@@ -187,6 +309,7 @@ function HistorialTorneos() {
   const prev = () => {
     if (index < TORNEOS.length - 1) setIndex(index + 1);
   };
+
   const next = () => {
     if (index > 0) setIndex(index - 1);
   };
@@ -195,21 +318,43 @@ function HistorialTorneos() {
     <div
       className="cl25-root"
       style={{
-        maxWidth: 1200,
+        maxWidth: 1600,
         margin: "0 auto",
         paddingTop: 20,
       }}
     >
       {/* LOGO */}
-      <div style={{ width: "100%", display: "flex", justifyContent: "center", marginBottom: 20 }}>
-        <img
-          src="https://i.ibb.co/8Dx2X5Gf/somos-balon-pie-png.webp"
-          alt="Somos Balonpie"
-          style={{ width: 200, height: "auto" }}
-        />
+      <div
+        style={{
+          width: "100%",
+          display: "flex",
+          justifyContent: "center",
+          marginBottom: 20,
+        }}
+      >
+        <Link
+          to="/"
+          style={{
+            display: "flex",
+            justifyContent: "center",
+          }}
+        >
+          <img
+            src="https://i.ibb.co/8DkLkqD5/somos-balon-pie-png-1.webp"
+            alt="Somos Balonpie y Morashop"
+            style={{
+              width: "350px",
+              maxWidth: "90%",
+              height: "auto",
+              cursor: "pointer",
+            }}
+          />
+        </Link>
       </div>
 
-      {/* TÍTULO */}
+
+
+      {/* TITULO */}
       <h2
         style={{
           background: "#191e25",
@@ -226,75 +371,125 @@ function HistorialTorneos() {
         Historial de Torneos
       </h2>
 
-      {/* =========================
-          TABLAS LADO A LADO
-      ========================= */}
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "flex-start",
-          gap: 25,
-          marginTop: 5,
-          flexWrap: "wrap",
-          width: "100%",
-          maxWidth: "100%",
-        }}
-      >
-        {/* Tabla izquierda: POSICIONES */}
-        <div
-          style={{
-            flex: "1 1 0",
-            minWidth: 350,
-            display: "flex",
-            flexDirection: "column",
-          }}
-        >
+      {/* TABLAS */}
+      <div className="historial-tablas">
+
+        {/* ============= POSICIONES ============= */}
+        <div className="table-wrapper">
+
           <TablaTemplate
-            title={formatTitle(torneoActual)}
-            rows={rows}
-            columns={columns}
-            height={550}
-            loading={loading}
-            mode="full"
-            getRowClassName={(params) =>
-              descensoPosiciones.includes(params.row.name)
-                ? "row-descended"
-                : ""
+            title={
+              <span className="titulo-tabla">
+                {formatTitle(torneoActual)}
+              </span>
             }
             onPrev={prev}
             onNext={next}
             prevDisabled={index === TORNEOS.length - 1}
             nextDisabled={index === 0}
+            mode="header"
+          />
+
+          <TablaTemplate
+            rows={rows}
+            columns={columns}
+            height={550}
+            loading={loading}
+            mode="body"
+            getRowClassName={(params) =>
+              descensoPosiciones.includes(params.row.name)
+                ? "row-descended"
+                : ""
+            }
           />
         </div>
 
-        {/* Tabla derecha: PROMEDIOS */}
-        <div
-          style={{
-            flex: "1 1 0",
-            minWidth: 350,
-            display: "flex",
-            flexDirection: "column",
-          }}
-        >
+        {/* ============= PROMEDIOS ============= */}
+        <div className="table-wrapper historial-promedios">
+
           <TablaTemplate
-            title="Promedios"
+            title="PROMEDIOS"
+            mode="header"
+            prevDisabled
+            nextDisabled
+          />
+
+          <TablaTemplate
             rows={promRows}
             columns={promColumns}
             height={550}
             loading={loading}
-            mode="full"
+            mode="body"
             getRowClassName={(params) =>
               descensoPromedios.includes(params.row.name)
                 ? "row-descended"
                 : ""
             }
+          />
+        </div>
+
+        {/* ============= RESULTADOS DE CAPITANES ============= */}
+        <div className="table-wrapper">
+
+          <TablaTemplate
+            title="RESULTADOS DE CAPITANES"
+            mode="header"
             prevDisabled
             nextDisabled
           />
+
+          <TablaTemplate
+            rows={resultRows}
+            columns={resultColumns}
+            height={550}
+            loading={loading}
+            mode="body"
+            getRowClassName={(params) => {
+              if (params.row.scoreRed > params.row.scoreBlue) return "row-red-win";
+              if (params.row.scoreBlue > params.row.scoreRed) return "row-blue-win";
+              return "row-draw";
+            }}
+          />
         </div>
+
       </div>
+
+
+
+      {/* ================== ESTILOS ================== */}
+      <style>
+        {`
+          .historial-tablas {
+            display: flex;
+            gap: 25px;
+            width: 100%;
+            max-width: 1550px;
+            margin: 0 auto;
+            justify-content: center;
+            align-items: flex-start;
+          }
+
+          /* Posiciones y Resultados */
+          .historial-tablas > div:not(.historial-promedios) {
+            flex: 1.2 1 0;
+          }
+
+          /* Promedios (más angosta) */
+          .historial-promedios {
+            flex: 0.7 1 0;
+          }
+
+          @media (max-width: 1100px) {
+            .historial-tablas {
+              flex-direction: column;
+            }
+          }
+
+
+        `}
+      </style>
+
+
     </div>
   );
 }

@@ -5,7 +5,7 @@ echo Iniciando servidor local de Vite...
 echo.
 
 REM Moverse a la carpeta del proyecto (CAMBIA esta ruta si tu carpeta está en otro lugar)
-cd /d "C:\Simios Stadio"
+cd /d "C:\Simios Stadio Web"
 
 REM Iniciar Vite en una nueva ventana
 start cmd /k "npm run dev"

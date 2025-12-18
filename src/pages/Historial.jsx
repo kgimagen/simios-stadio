@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { db } from "../firebase";
+import { Link } from "react-router-dom";
 import { collection, onSnapshot, orderBy, query, getDocs } from "firebase/firestore";
 import {
   Box,
@@ -96,11 +97,34 @@ function Historial() {
           marginBottom: 10,
         }}
       >
-        <img
-          src="https://i.ibb.co/8Dx2X5Gf/somos-balon-pie-png.webp"
-          alt="Somos Balonpie 2025"
-          style={{ width: "200px", height: "auto" }}
-        />
+        {/* LOGO */}
+        <div
+          style={{
+            width: "100%",
+            display: "flex",
+            justifyContent: "center",
+            marginBottom: 20,
+          }}
+        >
+          <Link
+            to="/"
+            style={{
+              display: "flex",
+              justifyContent: "center",
+            }}
+          >
+            <img
+              src="https://i.ibb.co/8DkLkqD5/somos-balon-pie-png-1.webp"
+              alt="Somos Balonpie y Morashop"
+              style={{
+                width: "350px",
+                maxWidth: "90%",
+                height: "auto",
+                cursor: "pointer",
+              }}
+            />
+          </Link>
+        </div>
       </div>
 
       {/* ================== TÍTULO ================== */}
