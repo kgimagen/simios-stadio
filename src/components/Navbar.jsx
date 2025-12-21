@@ -107,6 +107,15 @@ function Navbar() {
           Historial de Torneos
         </Link>
 
+        <Link 
+          to="/palmares" 
+          style={linkButton}
+          onMouseOver={(e) => Object.assign(e.target.style, linkButtonHover)}
+          onMouseOut={(e) => Object.assign(e.target.style, linkButton)}
+        >
+          Palmarés
+        </Link>
+
 
         {user && (
           <Link
@@ -149,6 +158,15 @@ function Navbar() {
         >
           Historial de Torneos
         </Link>
+
+        <Link
+          to="/palmares"
+          style={linkButton}
+          onClick={() => setOpen(false)}
+        >
+          Palmarés
+        </Link>
+
 
         {user && (
           <Link
