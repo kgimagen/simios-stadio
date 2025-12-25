@@ -54,6 +54,9 @@ function HistorialTorneos() {
   const descensoPosiciones = descendidos
     .slice(0, Math.max(descendidos.length - 4, 0))
     .map((p) => p.name);
+  const descensoTotal = Array.from(
+    new Set([...descensoPosiciones, ...descensoPromedios])
+  );
 
   // ============================
   // COLUMNAS TABLA POSICIONES
@@ -87,7 +90,7 @@ function HistorialTorneos() {
             />
             <span>
               {params.row.name}
-              {descensoPosiciones.includes(params.row.name) ? " 📉" : ""}
+              {descensoTotal.includes(params.row.name) ? " 📉" : ""}
             </span>
           </div>
         );
@@ -397,7 +400,7 @@ function HistorialTorneos() {
             loading={loading}
             mode="body"
             getRowClassName={(params) =>
-              descensoPosiciones.includes(params.row.name)
+              descensoTotal.includes(params.row.name)
                 ? "row-descended"
                 : ""
             }
@@ -495,3 +498,4 @@ function HistorialTorneos() {
 }
 
 export default HistorialTorneos;
+
