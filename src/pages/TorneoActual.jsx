@@ -45,10 +45,12 @@ function TorneoActual() {
         matches.sort((a, b) => (a.matchday || 0) - (b.matchday || 0));
 
         const playersSnap = await getDocs(collection(db, "players"));
-        const players = playersSnap.docs.map((docSnap) => ({
-          id: docSnap.id,
-          ...docSnap.data(),
-        }));
+        const players = playersSnap.docs
+          .map((docSnap) => ({
+            id: docSnap.id,
+            ...docSnap.data(),
+          }))
+          .filter((p) => p.active === true);
 
         setAllMatches(matches);
         setAllPlayers(players);
@@ -590,24 +592,31 @@ function TorneoActual() {
       });
 
       // ===========================================
-      // ULTIMOS 4 EN POSICIONES (excluyendo Promedios)
+      // ZONA DE DESCENSO:
+      // - Ultimos 4 de Promedios
+      // - Los 4 siguientes de Posiciones (excluyendo Promedios)
       // ===========================================
-      const last4PromNames = new Set(
-        promList.slice(-4).map((p) => p.name)
+      const last4PromIds = new Set(
+        promList.slice(-4).map((p) => p.id)
       );
 
       const posicionesFiltered = merged.slice().reverse();
 
       const posicionesLast4 = [];
       for (const p of posicionesFiltered) {
-        if (!last4PromNames.has(p.name)) {
+        if (!last4PromIds.has(p.id)) {
           posicionesLast4.push(p.id);
           if (posicionesLast4.length === 4) break;
         }
       }
 
+      const relegationIds = new Set([
+        ...last4PromIds,
+        ...posicionesLast4,
+      ]);
+
       merged.forEach((p) => {
-        p.isLast4pos = posicionesLast4.includes(p.id);
+        p.isLast4pos = relegationIds.has(p.id);
       });
 
       // Actualizar estados

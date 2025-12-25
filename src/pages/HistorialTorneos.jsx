@@ -472,6 +472,10 @@ function HistorialTorneos() {
             align-items: flex-start;
           }
 
+          .cl25-root {
+            padding-bottom: 140px;
+          }
+
           /* Posiciones y Resultados */
           .historial-tablas > div:not(.historial-promedios) {
             flex: 1.2 1 0;
@@ -485,6 +489,10 @@ function HistorialTorneos() {
           @media (max-width: 1100px) {
             .historial-tablas {
               flex-direction: column;
+            }
+
+            .cl25-root {
+              padding-bottom: 40px;
             }
           }
 

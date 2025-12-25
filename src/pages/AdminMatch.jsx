@@ -64,10 +64,12 @@ function AdminMatch() {
     const loadPlayers = async () => {
       try {
         const snap = await getDocs(collection(db, "players"));
-        const list = snap.docs.map((d) => ({
-          id: d.id,
-          ...(d.data() || {}),
-        }));
+        const list = snap.docs
+          .map((d) => ({
+            id: d.id,
+            ...(d.data() || {}),
+          }))
+          .filter((p) => p.active === true);
         // Orden alfabético por nombre
         list.sort((a, b) => (a.name || "").localeCompare(b.name || ""));
         setPlayers(list);

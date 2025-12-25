@@ -1,4 +1,4 @@
-// Palmares.jsx
+﻿// Palmares.jsx
 import { useEffect, useState } from "react";
 import { collection, getDocs, query, where } from "firebase/firestore";
 import { Box, Typography, Stack, Paper, Divider } from "@mui/material";
@@ -36,10 +36,13 @@ const TOURNAMENT_ORDER = [
 
 export default function Palmares() {
   const [champions, setChampions] = useState([]);
+  const [topPromedios, setTopPromedios] = useState([]);
   const [relegated, setRelegated] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showAllChampions, setShowAllChampions] = useState(false);
+  const [showAllTopPromedios, setShowAllTopPromedios] = useState(false);
   const [showAllRelegated, setShowAllRelegated] = useState(false);
+  const cardSx = { p: 2, width: "100%", maxWidth: 275 };
 
   useEffect(() => {
     loadPalmares();
@@ -60,6 +63,7 @@ export default function Palmares() {
     const tournamentsSnap = await getDocs(collection(db, "tournaments"));
 
     const championsMap = {};
+    const topPromMap = {};
     const relegatedMap = {};
 
     const summaryDocs = tournamentsSnap.docs.filter((d) =>
@@ -85,9 +89,14 @@ export default function Palmares() {
 
         /* ========= CAMPEÓN ========= */
         const championQuery = query(playersRef, where("campeon", "==", true));
+        const topPromQuery = query(
+          playersRef,
+          where("top_promedio", "==", true)
+        );
 
-        const [championSnap, promediosSnap] = await Promise.all([
+        const [championSnap, topPromSnap, promediosSnap] = await Promise.all([
           getDocs(championQuery),
+          getDocs(topPromQuery),
           getDocs(promediosRef),
         ]);
 
@@ -110,6 +119,28 @@ export default function Palmares() {
           }
 
           championsMap[key].titles.push(tournamentName);
+        });
+
+        /* ========= MEJOR PROMEDIO ========= */
+        topPromSnap.forEach((p) => {
+          const data = p.data();
+          const name = data?.name ?? "Sin nombre";
+          const key = normName(name);
+          const realId = playerIdByName[key] || null;
+
+          if (!topPromMap[key]) {
+            topPromMap[key] = {
+              id: realId,
+              name,
+              tournaments: [],
+            };
+          }
+
+          if (!topPromMap[key].id && realId) {
+            topPromMap[key].id = realId;
+          }
+
+          topPromMap[key].tournaments.push(tournamentName);
         });
 
         /* ========= DESCENDIDOS ========= */
@@ -149,6 +180,12 @@ export default function Palmares() {
       )
     );
 
+    Object.values(topPromMap).forEach((p) =>
+      p.tournaments.sort(
+        (a, b) => TOURNAMENT_ORDER.indexOf(b) - TOURNAMENT_ORDER.indexOf(a)
+      )
+    );
+
     setChampions(
       Object.values(championsMap).sort((a, b) => {
         if (b.titles.length !== a.titles.length) {
@@ -157,6 +194,19 @@ export default function Palmares() {
 
         const lastA = TOURNAMENT_ORDER.indexOf(a.titles[0]);
         const lastB = TOURNAMENT_ORDER.indexOf(b.titles[0]);
+
+        return lastB - lastA;
+      })
+    );
+
+    setTopPromedios(
+      Object.values(topPromMap).sort((a, b) => {
+        if (b.tournaments.length !== a.tournaments.length) {
+          return b.tournaments.length - a.tournaments.length;
+        }
+
+        const lastA = TOURNAMENT_ORDER.indexOf(a.tournaments[0]);
+        const lastB = TOURNAMENT_ORDER.indexOf(b.tournaments[0]);
 
         return lastB - lastA;
       })
@@ -180,6 +230,8 @@ export default function Palmares() {
 
   return (
     <Box sx={{ p: 3 }}>
+      <div className="palmares-grid">
+        <div className="palmares-column palmares-column--narrow">
       {/* ================= CAMPEONES ================= */}
       <Typography
         sx={{
@@ -216,10 +268,7 @@ export default function Palmares() {
         {!loading &&
           (showAllChampions ? champions : champions.slice(0, 3)).map(
             (player) => (
-              <Paper
-                key={`champ-${player.name}`}
-                sx={{ p: 2, width: "100%", maxWidth: 275 }}
-              >
+                  <Paper key={`champ-${player.name}`} sx={cardSx}>
                 <Stack direction="row" spacing={2} alignItems="center">
                   <Box
                     sx={{
@@ -249,7 +298,10 @@ export default function Palmares() {
                       }}
                     />
                     <Typography fontWeight="bold">
-                      {player.name} ({player.titles.length})
+                      {player.name}{" "}
+                      <span style={{ fontWeight: 400, fontSize: "12px" }}>
+                        ({player.titles.length})
+                      </span>
                     </Typography>
                   </Box>
 
@@ -259,21 +311,20 @@ export default function Palmares() {
                         <Typography
                           key={`title-${player.name}-${t}`}
                           variant="body2"
-                          sx={{ fontWeight: 700 }}
                         >
                           {t}{" "}
-                          <span
-                            style={{
-                              color: t.includes("Verano")
-                                ? "#C0C0C0"
-                                : "#FFD700",
-                              fontWeight: 700,
-                              marginLeft: "4px",
-                              fontSize: "16px",
-                            }}
-                          >
-                            ★
-                          </span>
+                            <span
+                              style={{
+                                color: t.includes("Verano")
+                                  ? "#C0C0C0"
+                                  : "#FFD700",
+                                fontWeight: 700,
+                                marginLeft: "4px",
+                                fontSize: "16px",
+                              }}
+                            >
+                              &#9733;
+                            </span>
                         </Typography>
                       ))}
                     </Stack>
@@ -284,7 +335,7 @@ export default function Palmares() {
           )}
       </Stack>
 
-      {!loading && champions.length > 3 && !showAllChampions && (
+      {!loading && champions.length > 3 && (
         <Typography
           sx={{
             margin: "16px auto 0",
@@ -302,7 +353,7 @@ export default function Palmares() {
             transition: "transform 0.2s ease, opacity 0.2s ease",
             userSelect: "none",
           }}
-          onClick={() => setShowAllChampions(true)}
+          onClick={() => setShowAllChampions((v) => !v)}
           onMouseOver={(e) => {
             e.target.style.transform = "translateY(-1px)";
             e.target.style.opacity = "0.85";
@@ -312,12 +363,150 @@ export default function Palmares() {
             e.target.style.opacity = "1";
           }}
         >
-          VER MÁS
+          {showAllChampions ? "VER MENOS" : "VER MAS"}
         </Typography>
       )}
 
-      <Divider sx={{ my: 4 }} />
+      <Divider className="palmares-divider" sx={{ my: 4 }} />
+        </div>
 
+        <div className="palmares-column">
+      {/* ================= MEJOR PROMEDIO ================= */}
+      <Typography
+        sx={{
+          fontFamily: "Bebas Neue",
+          fontSize: "28px",
+          letterSpacing: "1px",
+          color: "white",
+          marginBottom: "10px",
+          borderBottom: "2px solid rgba(255,255,255,0.15)",
+          paddingBottom: "6px",
+          textAlign: "center",
+        }}
+      >
+        MEJOR PROMEDIO
+      </Typography>
+
+      {loading && (
+        <Typography
+          sx={{
+            textAlign: "center",
+            fontFamily: "Bebas Neue",
+            fontSize: "16px",
+            letterSpacing: "2px",
+            opacity: 0.6,
+            mb: 2,
+            animation: "pulse 1.4s ease-in-out infinite",
+          }}
+        >
+          CARGANDO RESULTADOS
+        </Typography>
+      )}
+
+      <Stack spacing={2} alignItems="center">
+        {!loading &&
+          (showAllTopPromedios ? topPromedios : topPromedios.slice(0, 3)).map(
+            (player) => (
+                  <Paper key={`top-prom-${player.name}`} sx={cardSx}>
+                <Stack direction="row" spacing={2} alignItems="center">
+                  <Box
+                    sx={{
+                      minWidth: 90,
+                      display: "flex",
+                      flexDirection: "column",
+                      alignItems: "center",
+                      textAlign: "center",
+                    }}
+                  >
+                    <img
+                      src={
+                        player.id
+                          ? `/players/${player.id}.jpg`
+                          : "/players/default.jpg"
+                      }
+                      alt={player.name}
+                      width={50}
+                      height={50}
+                      style={{
+                        borderRadius: 6,
+                        objectFit: "cover",
+                        marginBottom: 6,
+                      }}
+                      onError={(e) => {
+                        e.target.src = "/players/default.jpg";
+                      }}
+                    />
+                    <Typography fontWeight="bold">
+                      {player.name}{" "}
+                      <span style={{ fontWeight: 400, fontSize: "12px" }}>
+                        ({player.tournaments.length})
+                      </span>
+                    </Typography>
+                  </Box>
+
+                  <Box sx={{ flexGrow: 1, textAlign: "center" }}>
+                    <Stack spacing={0.4} alignItems="center">
+                      {player.tournaments.map((t) => (
+                        <Typography
+                          key={`top-prom-${player.name}-${t}`}
+                          variant="body2"
+                        >
+                          {t}{" "}
+                            <span
+                              style={{
+                                fontWeight: 700,
+                                marginLeft: "4px",
+                                fontSize: "16px",
+                              }}
+                            >
+                              📈
+                            </span>
+                        </Typography>
+                      ))}
+                    </Stack>
+                  </Box>
+                </Stack>
+              </Paper>
+            )
+          )}
+      </Stack>
+
+      {!loading && topPromedios.length > 3 && (
+        <Typography
+          sx={{
+            margin: "16px auto 0",
+            padding: "10px 26px",
+            display: "block",
+            width: "fit-content",
+            textAlign: "center",
+            fontFamily: "Bebas Neue",
+            fontSize: "18px",
+            letterSpacing: "2px",
+            cursor: "pointer",
+            color: "#ffffff",
+            background: "#1d2024",
+            borderRadius: "999px",
+            transition: "transform 0.2s ease, opacity 0.2s ease",
+            userSelect: "none",
+          }}
+          onClick={() => setShowAllTopPromedios((v) => !v)}
+          onMouseOver={(e) => {
+            e.target.style.transform = "translateY(-1px)";
+            e.target.style.opacity = "0.85";
+          }}
+          onMouseOut={(e) => {
+            e.target.style.transform = "translateY(0)";
+            e.target.style.opacity = "1";
+          }}
+        >
+          {showAllTopPromedios ? "VER MENOS" : "VER MAS"}
+        </Typography>
+      )}
+
+      <Divider className="palmares-divider" sx={{ my: 4 }} />
+        </div>
+
+        <div className="palmares-column">
       {/* ================= DESCENDIDOS ================= */}
       <Typography
         sx={{
@@ -354,10 +543,7 @@ export default function Palmares() {
         {!loading &&
           (showAllRelegated ? relegated : relegated.slice(0, 3)).map(
             (player) => (
-              <Paper
-                key={`rel-${player.name}`}
-                sx={{ p: 2, width: "100%", maxWidth: 275 }}
-              >
+                  <Paper key={`rel-${player.name}`} sx={cardSx}>
                 <Stack direction="row" spacing={2} alignItems="center">
                   <Box
                     sx={{
@@ -387,7 +573,10 @@ export default function Palmares() {
                       }}
                     />
                     <Typography fontWeight="bold">
-                      {player.name} ({player.tournaments.length})
+                      {player.name}{" "}
+                      <span style={{ fontWeight: 400, fontSize: "12px" }}>
+                        ({player.tournaments.length})
+                      </span>
                     </Typography>
                   </Box>
 
@@ -409,7 +598,7 @@ export default function Palmares() {
           )}
       </Stack>
 
-      {!loading && relegated.length > 3 && !showAllRelegated && (
+      {!loading && relegated.length > 3 && (
         <Typography
           sx={{
             margin: "16px auto 0",
@@ -427,7 +616,7 @@ export default function Palmares() {
             transition: "transform 0.2s ease, opacity 0.2s ease",
             userSelect: "none",
           }}
-          onClick={() => setShowAllRelegated(true)}
+          onClick={() => setShowAllRelegated((v) => !v)}
           onMouseOver={(e) => {
             e.target.style.transform = "translateY(-1px)";
             e.target.style.opacity = "0.85";
@@ -437,12 +626,55 @@ export default function Palmares() {
             e.target.style.opacity = "1";
           }}
         >
-          VER MÁS
+          {showAllRelegated ? "VER MENOS" : "VER MAS"}
         </Typography>
       )}
 
+        </div>
+      </div>
+
       <style>
         {`
+          .palmares-grid {
+            display: flex;
+            gap: 28px;
+            justify-content: center;
+            align-items: flex-start;
+          }
+
+          .palmares-column {
+            flex: 1;
+            max-width: 320px;
+          }
+
+          .palmares-column--narrow {
+            max-width: 300px;
+          }
+
+          .palmares-divider {
+            display: none;
+          }
+
+          @media (max-width: 900px) {
+            .palmares-grid {
+              flex-direction: column;
+              align-items: center;
+            }
+
+            .palmares-column {
+              width: 100%;
+              max-width: 320px;
+              width: 100%;
+              display: flex;
+              flex-direction: column;
+              align-items: center;
+            }
+
+            .palmares-divider {
+              display: block;
+            }
+          }
+
           @keyframes pulse {
             0% { opacity: 0.4; }
             50% { opacity: 0.8; }
@@ -453,3 +685,5 @@ export default function Palmares() {
     </Box>
   );
 }
+
+
